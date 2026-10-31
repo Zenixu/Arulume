@@ -336,7 +336,7 @@ Detail pipeline ada di bagian 11.1. Persyaratan:
 - Saat aplikasi dibuka, plugin mengembalikan: ABI, level API, RAM total, jumlah core CPU, ketersediaan Vulkan dan nama GPU, daftar model terpasang.
 - UI menampilkan peringatan jika Vulkan tidak ada ("pemrosesan memakai CPU, akan jauh lebih lambat").
 
-#### FR-11 Batch foto (P1)
+#### FR-11 Batch foto (P1, selesai)
 - Memilih beberapa foto, diproses berurutan (satu per satu, bukan paralel) dengan pengaturan yang sama.
 - Satu kegagalan tidak menghentikan batch; ringkasan akhir menampilkan sukses/gagal per file.
 - Batal menghentikan seluruh antrian.
@@ -918,7 +918,7 @@ Setiap milestone punya kriteria keluar. Tidak melanjutkan sebelum kriteria terpe
 - [ ] FR-01 sampai FR-07, FR-10, FR-13 (P0).
 - [ ] Tiling lengkap, alpha, EXIF, fallback GPU → CPU.
 - [ ] Progres, cancel, pratinjau slider, simpan MediaStore.
-- [ ] FR-08, FR-09, FR-12 (P1). FR-11 batch belum.
+- [ ] FR-08, FR-09, FR-12 (P1). FR-11 batch sudah (uji 2 foto 1600×900 + 800×450, 34 dtk).
 - [ ] Seluruh set uji 18.3 + TC-01 sampai TC-12 lulus.
 - [ ] Izin `INTERNET` dihapus pada build final; APK release bertanda tangan.
 - **Keluar:** Definition of Done Fase 1 (bagian 22).

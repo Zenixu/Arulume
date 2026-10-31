@@ -101,11 +101,81 @@ Bukti uji (Redmi Note 8, API 30):
 - Belum diuji ulang: pembunuhan proses oleh sistem (`am kill`/Doze) saat job berjalan — bukti kuat saat ini hanya Home + layar mati.
 - Job gagal (berkas hilang) → notifikasi "Gagal memperbesar foto · Foto tidak bisa dibaca", bukan teks `ENOENT`.
 
+---
+
+## 1.3 Batch foto, format hasil & onboarding
+
+**Status:** Selesai · 31 Oktober 2026 · FR-11, FR-09
+
+- **Satu job, banyak foto.** `pickMedia({ multiple: true })` memakai `ACTION_PICK_IMAGES` +
+  `EXTRA_ALLOW_MULTIPLE` (fallback `ACTION_OPEN_DOCUMENT`), hasil `ClipData` dikumpulkan di
+  `MainActivity.onActivityResult` → `ArrayList<Uri>`. Batas `MAX_BATCH = 20`.
+- **Diproses berurutan** di `enhancer-worker`: satu foto gagal tidak menghentikan antrian,
+  batal membatalkan seluruh antrian, progres notifikasi = persen gabungan job
+  (`itemPercent` per foto dikirim terpisah).
+- **Layar `/batch`**: daftar foto + keadaan (menunggu/proses/selesai/gagal), progres gabungan,
+  simpan satu per satu atau "Simpan semua". Tidak ada foto yang masuk galeri tanpa ditekan.
+- **Nama berkas unik**: `ImagePipeline.writeResult` menambah akhiran `-2`, `-3`, … kalau dua foto
+  selesai di detik yang sama (batch bisa begitu).
+- **Format hasil**: JPEG / PNG / WebP, dipilih di Pengaturan (`arulume.format`), dipakai editor
+  maupun batch. PNG/WebP transparan diratakan ke putih sebelum inferensi (mesin native RGB).
+- **Pemberitahuan batas output**: Editor menampilkan "Diproses pada N px sisi terpanjang → W × H"
+  dan peringatan "Foto dikecilkan dulu supaya hasil pas 2048 px" saat sumber harus diperkecil.
+- **Onboarding** `/mulai`: satu layar (maskot, tiga janji: tidak diunggah, hasil kamu putuskan,
+  gratis tanpa akun), tampil sekali lewat `arulume.onboarding`.
+
+Bukti uji (Redmi Note 8, API 30):
+
+- Job batch 2 foto (1600×900 + 800×450) selesai 34 dtk, notifikasi 13% → 84% → "2 foto selesai
+  diperbesar", `itemDone` index 0 (2048×1152) dan index 1 (1600×900), riwayat bertambah 2 entri.
+- Pemilih multi-foto terbuka dalam mode pilih-banyak; kalau MIUI membunuh proses saat pemilih
+  di depan, `getPendingPick()` mengembalikan daftar dan aplikasi lanjut ke `/batch` (bukan editor).
+- Onboarding muncul pada peluncuran pertama (`pm clear`), tombol Mulai menyimpan penanda.
+- Pengaturan menampilkan bagian FORMAT HASIL (JPG/PNG/WebP) dengan keterangan per pilihan.
+
+### Mutu keluaran (set uji PRD 18.3)
+
+Diuji satu per satu lewat jembatan plugin di Redmi Note 8 (API 30), skala 2×,
+batas keluaran 2048 px, format JPEG:
+
+| Foto | Masukan | Hasil | Waktu |
+|---|---|---|---|
+| #1 normal | 1000×1000 JPEG | 2000×2000 | 62,7 dtk* |
+| #2 buram | 640×480 JPEG | 1280×960 | ~14 dtk |
+| #3 transparan | 600×600 PNG alpha | 1200×1200 PNG, alpha utuh | 26,5 dtk |
+| #4 EXIF 90° | 800×600 (tag 6) | 1200×1600 (diputar) | 26,0 dtk |
+| #4 EXIF 270° | 800×600 (tag 8) | 1200×1600 (diputar) | 30,4 dtk |
+| #5 WebP | 900×700 WebP | 1800×1400 | 31,3 dtk |
+| #7 12 MP | 4000×3000 JPEG | 2048×1536 | 38,6 dtk |
+| #8 panorama | 8000×1000 JPEG | 2048×256 | 8,7 dtk |
+| #9 mini | 32×32 JPEG | 64×64 | 5,3 dtk |
+| #10 rusak | JPEG terpotong 4 KB | `E_DECODE_FAILED` "Foto tidak bisa dibaca" | 5,2 dtk |
+| #12 teks | 1200×800 JPEG | 2048×1364 | 30,0 dtk |
+| #13 gelap | 800×600 JPEG berderau | 1600×1200 | 21,8 dtk |
+
+\* HP sedang dipakai aplikasi lain (RAM tersisa sedikit, swap penuh); pada kondisi
+lapang foto yang sama selesai ~15 dtk.
+
+**20 foto berturut-turut** (10 job × 2 foto, antrian batch, aplikasi di latar depan):
+semua selesai, riwayat 15 → 35 entri, 37,0 dtk per dua foto dan tidak melambat di job
+ke-10, proses aplikasi tetap sama (tanpa crash, tanpa restart), tidak ada entri di
+log crash.
+
+Dua perbaikan yang lahir dari uji ini:
+
+- **Alpha PNG/WebP dipertahankan** (TC-04). Sebelumnya transparansi diratakan ke putih.
+  Sekarang bitmap sumber disimpan, lalu topeng alpha-nya diskalakan ke ukuran hasil dan
+  dipasang kembali (`ImagePipeline.pasangAlpha`). Hasil uji #3: 443.936 px opak dan
+  985.792 px transparan dari 1.440.000 px — sesuai bentuk aslinya.
+- **Berkas terpotong ditolak.** `BitmapFactory` tetap "berhasil" mendekode JPEG yang
+  terpotong (sisanya abu-abu). Sekarang `ImagePipeline.berkasUtuh` memeriksa penanda
+  akhir (JPEG `FF D9`, PNG `IEND`) sebelum dekode, jadi user dapat pesan jelas.
+
 Sisa Fase 1:
 
-- Batch foto (FR-11), onboarding satu layar, dukungan HEIC/PNG/WebP, dialog foto terlalu besar.
 - Uji di Android 13+ (dialog `POST_NOTIFICATIONS`) dan Android 14+ (`foregroundServiceType` ditegakkan).
-- Mutu: set uji foto #1–#13, TC-01–TC-12, 20 proses berturut-turut, ikon adaptive, `allowBackup="false"`, APK rilis bertanda tangan.
+- Mutu: set uji foto #1–#13, TC-01–TC-12, APK rilis bertanda tangan (ikon adaptive, `allowBackup="false"`,
+  layar Tentang & lisensi sudah beres).
 
 ---
 

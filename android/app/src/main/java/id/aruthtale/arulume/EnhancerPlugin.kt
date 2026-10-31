@@ -24,6 +24,7 @@ import com.getcapacitor.PluginMethod
 import com.getcapacitor.annotation.CapacitorPlugin
 import com.getcapacitor.annotation.Permission
 import com.getcapacitor.annotation.PermissionCallback
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.util.concurrent.Executors
@@ -209,12 +210,23 @@ class EnhancerPlugin : Plugin() {
             return
         }
 
+        // `multiple: true` untuk batch (PRD FR-11). Batas 20 foto per antrian
+        // supaya memori dan waktu tunggu tetap wajar di perangkat kelas menengah.
+        val multiple = call.getBoolean("multiple") ?: false
+        val batas = (call.getInt("maxItems") ?: MAX_BATCH).coerceIn(2, MAX_BATCH)
+
         val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            Intent(MediaStore.ACTION_PICK_IMAGES).apply { this.type = "image/*" }
+            Intent(MediaStore.ACTION_PICK_IMAGES).apply {
+                this.type = "image/*"
+                if (multiple) {
+                    putExtra(MediaStore.EXTRA_PICK_IMAGES_MAX, batas)
+                }
+            }
         } else {
             Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                 addCategory(Intent.CATEGORY_OPENABLE)
                 this.type = "image/*"
+                if (multiple) putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
             }
         }
 
@@ -234,16 +246,16 @@ class EnhancerPlugin : Plugin() {
     }
 
     /** Dipanggil `MainActivity` setelah pemilih foto selesai. */
-    fun onPickResult(ok: Boolean, uri: Uri?) {
+    fun onPickResult(ok: Boolean, uris: List<Uri>) {
         val call = pendingPickCall ?: return
         pendingPickCall = null
         pendingPick = false
-        if (!ok || uri == null) {
+        if (!ok || uris.isEmpty()) {
             call.reject("Pemilihan dibatalkan", "E_PICK_CANCELLED")
             return
         }
         forgetPendingPick()
-        resolvePickedUri(call, uri)
+        resolvePickedUri(call, uris)
     }
 
     /**
@@ -260,50 +272,75 @@ class EnhancerPlugin : Plugin() {
             return
         }
         prefs.edit().remove(KEY_PICK).apply()
-        resolvePickedUri(call, Uri.parse(raw))
+        val uris = try {
+            val arr = JSONArray(raw)
+            (0 until arr.length()).mapNotNull { i ->
+                arr.optString(i).takeIf { it.isNotBlank() }?.let { Uri.parse(it) }
+            }
+        } catch (t: Throwable) {
+            // Format lama: satu URI tersimpan sebagai string biasa.
+            listOfNotNull(Uri.parse(raw))
+        }
+        resolvePickedUri(call, uris)
     }
 
-    /** Baca metadata + pratinjau satu URI, lalu balas ke JS. */
-    private fun resolvePickedUri(call: PluginCall, uri: Uri) {
+    /** Baca metadata + pratinjau setiap URI terpilih, lalu balas ke JS. */
+    private fun resolvePickedUri(call: PluginCall, uris: List<Uri>) {
         // Izin baca bertahan selama sesi; kalau sistem mengizinkan, simpan permanen.
-        try {
-            context.contentResolver.takePersistableUriPermission(
-                uri,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION,
-            )
-        } catch (t: Throwable) {
-            Log.d(TAG, "Izin URI tidak permanen: ${t.message}")
+        uris.forEach { uri ->
+            try {
+                context.contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                )
+            } catch (t: Throwable) {
+                Log.d(TAG, "Izin URI tidak permanen: ${t.message}")
+            }
         }
 
         worker.execute {
             try {
                 val ctx = context
-                val (name, mime, size) = ImagePipeline.queryMeta(ctx, uri)
-                val (w, h) = ImagePipeline.bounds(ctx, uri)
-                if (w <= 0 || h <= 0) {
+                val items = JSArray()
+                var gagal = 0
+                for (uri in uris.take(MAX_BATCH)) {
+                    try {
+                        val (name, mime, size) = ImagePipeline.queryMeta(ctx, uri)
+                        val (w, h) = ImagePipeline.bounds(ctx, uri)
+                        if (w <= 0 || h <= 0) {
+                            gagal++
+                            continue
+                        }
+                        val thumb = ImagePipeline.decode(ctx, uri, 720)
+                        val previewPath = if (thumb != null) {
+                            val p = ImagePipeline.writePreview(ctx, thumb, 720)
+                            thumb.recycle()
+                            p
+                        } else {
+                            ""
+                        }
+                        items.put(
+                            JSObject()
+                                .put("uri", uri.toString())
+                                .put("name", name)
+                                .put("mime", mime)
+                                .put("sizeBytes", size)
+                                .put("width", w)
+                                .put("height", h)
+                                .put("previewPath", previewPath),
+                        )
+                    } catch (t: Throwable) {
+                        // Satu foto rusak tidak boleh menggagalkan seluruh pilihan.
+                        Log.w(TAG, "Lewati foto ${uri}: ${t.message}")
+                        gagal++
+                    }
+                }
+
+                if (items.length() == 0) {
                     call.reject("Foto tidak bisa dibaca", "E_DECODE_FAILED")
                     return@execute
                 }
-
-                val thumb = ImagePipeline.decode(ctx, uri, 720)
-                val previewPath = if (thumb != null) {
-                    val p = ImagePipeline.writePreview(ctx, thumb, 720)
-                    thumb.recycle()
-                    p
-                } else {
-                    ""
-                }
-
-                val item = JSObject()
-                    .put("uri", uri.toString())
-                    .put("name", name)
-                    .put("mime", mime)
-                    .put("sizeBytes", size)
-                    .put("width", w)
-                    .put("height", h)
-                    .put("previewPath", previewPath)
-
-                call.resolve(JSObject().put("items", JSArray().put(item)))
+                call.resolve(JSObject().put("items", items).put("skipped", gagal))
             } catch (t: Throwable) {
                 Log.e(TAG, "Baca foto gagal", t)
                 call.reject("Foto tidak bisa dibaca", "E_DECODE_FAILED")
@@ -341,22 +378,92 @@ class EnhancerPlugin : Plugin() {
             .coerceIn(256, ImagePipeline.MAX_OUTPUT_SIDE)
         val out = call.getObject("output")
         val quality = (out?.getInteger("quality") ?: 95).coerceIn(60, 100)
+        val format = out?.getString("format") ?: "jpeg"
 
         val jobId = JobRunner.jobIdBaru()
         val params = JobRunner.Params(
             jobId = jobId,
-            uri = uriStr,
+            uris = listOf(uriStr),
             modelId = modelId,
             scale = scale,
             useGpu = useGpu,
             tileSize = tileReq,
             maxOutputLongSide = maxOut,
             quality = quality,
+            format = format,
         )
 
         // Kontrak: kembali segera. Kerja berat pindah ke layanan foreground
         // supaya tetap jalan saat aplikasi ditinggal atau layar mati.
         call.resolve(JSObject().put("jobId", jobId))
+        try {
+            EnhancerService.mulai(context, params)
+        } catch (t: Throwable) {
+            Log.e(TAG, "Layanan proses gagal dimulai", t)
+            notifyListeners(
+                "failed",
+                JSObject()
+                    .put("jobId", jobId)
+                    .put("code", "E_UNKNOWN")
+                    .put("message", "Tidak bisa memulai proses di latar")
+                    .put("recoverable", true),
+            )
+        }
+    }
+
+    /**
+     * Memproses beberapa foto sekaligus (PRD FR-11). Foto dikerjakan berurutan di
+     * satu layanan foreground; satu kegagalan tidak menghentikan antrian.
+     * Event: `progress` (ada `index`/`total`), `itemDone`, `itemFailed`, `completed`.
+     */
+    @PluginMethod
+    fun startEnhanceBatch(call: PluginCall) {
+        val arr = call.getArray("uris")
+        val uris = ArrayList<String>()
+        if (arr != null) {
+            for (i in 0 until arr.length()) {
+                val s = arr.optString(i, "")
+                if (s.isNotBlank()) uris.add(s)
+            }
+        }
+        if (uris.isEmpty()) {
+            call.reject("Belum ada foto yang dipilih", "E_DECODE_FAILED")
+            return
+        }
+        if (uris.size > MAX_BATCH) {
+            call.reject("Maksimal $MAX_BATCH foto sekali proses", "E_TOO_MANY")
+            return
+        }
+        if (JobRunner.sedangJalan() != null) {
+            call.reject("Masih ada proses lain yang berjalan", "E_BUSY")
+            return
+        }
+
+        val scale = (call.getInt("scale") ?: 2).coerceIn(2, 4)
+        val modelId = call.getString("model")?.takeIf { it.isNotBlank() }
+            ?: modelForScale(scale)
+        if (modelId == null) {
+            call.reject("Belum ada model di assets/models/", "E_MODEL_MISSING")
+            return
+        }
+
+        val out = call.getObject("output")
+        val maxOut = (call.getInt("maxOutputLongSide") ?: ImagePipeline.MAX_OUTPUT_SIDE)
+            .coerceIn(256, ImagePipeline.MAX_OUTPUT_SIDE)
+        val jobId = JobRunner.jobIdBaru()
+        val params = JobRunner.Params(
+            jobId = jobId,
+            uris = uris,
+            modelId = modelId,
+            scale = scale,
+            useGpu = call.getBoolean("useGpu") ?: false,
+            tileSize = call.getInt("tileSize") ?: 0,
+            maxOutputLongSide = maxOut,
+            quality = (out?.getInteger("quality") ?: 95).coerceIn(60, 100),
+            format = out?.getString("format") ?: "jpeg",
+        )
+
+        call.resolve(JSObject().put("jobId", jobId).put("total", uris.size))
         try {
             EnhancerService.mulai(context, params)
         } catch (t: Throwable) {
@@ -395,7 +502,9 @@ class EnhancerPlugin : Plugin() {
                 .put("jobId", s.jobId)
                 .put("stage", s.stage)
                 .put("percent", s.percent)
-                .put("aktif", s.aktif),
+                .put("aktif", s.aktif)
+                .put("index", s.index)
+                .put("total", s.total),
         )
     }
 
@@ -478,7 +587,8 @@ class EnhancerPlugin : Plugin() {
                     call.reject("Hasil tidak bisa dibaca", "E_SAVE_FAILED")
                     return@execute
                 }
-                val saved = ImagePipeline.saveToGallery(context, bmp, quality)
+                val fmt = ImagePipeline.OutFormat.dari(file.extension)
+                val saved = ImagePipeline.saveToGallery(context, bmp, quality, fmt)
                 if (saved == null) {
                     call.reject("Gagal menyimpan ke galeri", "E_SAVE_FAILED")
                     return@execute
@@ -786,18 +896,24 @@ class EnhancerPlugin : Plugin() {
         @Volatile
         private var instance: EnhancerPlugin? = null
 
+        /** Batas foto per antrian batch (PRD FR-11). */
+        const val MAX_BATCH = 20
+
         /** Dipanggil `MainActivity.onActivityResult` untuk meneruskan hasil pemilih. */
-        fun deliverPick(ok: Boolean, uri: Uri?) {
-            instance?.onPickResult(ok, uri)
+        fun deliverPick(ok: Boolean, uris: List<Uri>) {
+            instance?.onPickResult(ok, uris)
         }
 
         /**
          * Dipanggil `MainActivity.onActivityResult` saat hasil pemilih datang lewat
          * jalur lama (proses sempat mati). Disimpan di disk, bukan memori.
          */
-        fun rememberPick(ctx: Context, uri: Uri) {
+        fun rememberPick(ctx: Context, uris: List<Uri>) {
+            if (uris.isEmpty()) return
+            val arr = JSONArray()
+            uris.forEach { arr.put(it.toString()) }
             ctx.getSharedPreferences(PREFS_PICK, Context.MODE_PRIVATE)
-                .edit().putString(KEY_PICK, uri.toString()).apply()
+                .edit().putString(KEY_PICK, arr.toString()).apply()
         }
     }
 }

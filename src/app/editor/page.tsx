@@ -15,7 +15,7 @@ import { Mascot, MASCOT_ROLE } from "@/components/mascot";
 import { IconArrowLeft } from "@/components/icons";
 import { Enhancer, isNative } from "@/plugins/enhancer";
 import { pesanError, useJobStore } from "@/lib/job-store";
-import { bacaSkalaBawaan } from "@/lib/settings";
+import { bacaFormat, bacaSkalaBawaan, type Format } from "@/lib/settings";
 
 const STAGE_LABEL: Record<string, string> = {
   decoding: "Membaca foto",
@@ -33,11 +33,13 @@ export default function Editor() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [skala, setSkala] = useState<2 | 4>(2);
+  const [format, setFormat] = useState<Format>("jpeg");
 
   // Skala bawaan dari Pengaturan (PRD FR-09); dibaca setelah mount supaya
   // ekspor statis tidak menyentuh localStorage di server.
   useEffect(() => {
     setSkala(bacaSkalaBawaan());
+    setFormat(bacaFormat());
   }, []);
 
   const jobIdRef = useRef<string | null>(null);
@@ -146,7 +148,7 @@ export default function Editor() {
         tileSize: 0,
         useGpu: false,
         keepExif: true,
-        output: { format: "jpeg", quality: 95, target: "gallery" },
+        output: { format, quality: 95, target: "gallery" },
         maxOutputLongSide: 2048,
         autoDownscaleInput: true,
       });
@@ -222,6 +224,11 @@ export default function Editor() {
             <span className="text-caption text-text-2">
               Diproses pada {MASUK} px sisi terpanjang → {keluaran.w} × {keluaran.h}
             </span>
+            {k < 1 ? (
+              <span className="text-caption text-warning">
+                Foto dikecilkan dulu supaya hasil pas 2048 px.
+              </span>
+            ) : null}
           </div>
           <div
             role="radiogroup"

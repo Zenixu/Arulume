@@ -13,11 +13,16 @@ import { Mascot, MASCOT_ROLE } from "@/components/mascot";
 import { IconArrowLeft, IconChevronRight } from "@/components/icons";
 import { Enhancer, isNative } from "@/plugins/enhancer";
 import {
+  bacaFormat,
   bacaSkalaBawaan,
   bacaTema,
+  KETERANGAN_FORMAT,
+  LABEL_FORMAT,
   LABEL_TEMA,
+  simpanFormat,
   simpanSkalaBawaan,
   terapkanTema,
+  type Format,
   type Tema,
 } from "@/lib/settings";
 
@@ -58,12 +63,14 @@ export default function Pengaturan() {
   const router = useRouter();
   const [tema, setTema] = useState<Tema>("gelap");
   const [skala, setSkala] = useState<2 | 4>(2);
+  const [format, setFormat] = useState<Format>("jpeg");
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     setTema(bacaTema());
     setSkala(bacaSkalaBawaan());
+    setFormat(bacaFormat());
   }, []);
 
   function gantiTema(t: Tema) {
@@ -74,6 +81,11 @@ export default function Pengaturan() {
   function gantiSkala(s: 2 | 4) {
     setSkala(s);
     simpanSkalaBawaan(s);
+  }
+
+  function gantiFormat(f: Format) {
+    setFormat(f);
+    simpanFormat(f);
   }
 
   async function hapusCache() {
@@ -143,6 +155,22 @@ export default function Pengaturan() {
             Dipakai sebagai pilihan awal di layar Editor. Kamu tetap bisa
             mengubahnya tiap foto.
           </p>
+        </section>
+
+        <section className="flex flex-col gap-2">
+          <h2 className="text-caption uppercase tracking-wide text-text-2">
+            Format hasil
+          </h2>
+          <Segmen<Format>
+            nilai={format}
+            onPilih={gantiFormat}
+            opsi={[
+              { nilai: "jpeg", label: LABEL_FORMAT.jpeg },
+              { nilai: "png", label: LABEL_FORMAT.png },
+              { nilai: "webp", label: LABEL_FORMAT.webp },
+            ]}
+          />
+          <p className="text-caption text-text-2">{KETERANGAN_FORMAT[format]}</p>
         </section>
 
         <section className="flex flex-col gap-2">

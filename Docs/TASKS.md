@@ -67,16 +67,17 @@ Tujuan: membuktikan jalur teknis dan mengukur performa di HP sendiri.
 - [x] `pickMedia` (Photo Picker, fallback SAF), metadata + thumbnail (FR-01)
 - [x] `startEnhanceImage` asinkron + event `progress`/`completed`/`failed` (FR-03, FR-04)
 - [x] `cancelJob` dengan pembersihan file sementara (FR-04)
-- [ ] Validasi batas output + dialog opsi (perkecil input / turunkan skala)
-- [ ] Orientasi EXIF, alpha (PNG transparan), format JPEG/PNG/WebP, HEIC (API 28+)
-- [ ] Fallback bertahap: tile kecil → CPU → `E_OUT_OF_MEMORY`
+- [x] Validasi batas output + pemberitahuan (input dikecilkan ke 2048/skala, ditampilkan di Editor)
+- [x] Orientasi EXIF (diputar sesuai tag), alpha PNG/WebP dipertahankan (topeng dipasang ulang), format JPEG/PNG/WebP, HEIC (API 28+ lewat BitmapFactory)
+- [x] Deteksi berkas terpotong (JPEG tanpa EOI, PNG tanpa IEND) → `E_DECODE_FAILED`, bukan hasil separuh
+- [x] Fallback bertahap: tile diperkecil 3 percobaan → `E_OUT_OF_MEMORY` yang jelas
 - [x] `MediaSaver` (galeri `Pictures/Arulume`, dipanggil dari tombol Simpan) (FR-06)
 - [x] `PreviewBuilder` untuk sebelum/sesudah (FR-05)
 - [x] `openInGallery`, `shareResult` (FR-07)
 - [x] `clearCache`
 
 ### 1.2 UI (P0), mengikuti `design.md`
-- [ ] Komponen dasar: tombol utama/sekunder, chip, segmen, dialog, progress bar
+- [x] Komponen dasar: tombol utama/sekunder, chip, segmen, progress bar (dialog masih inline)
 - [x] Komponen `<Mascot mood size />` dengan SVG orisinal
 - [x] Layar Beranda
 - [x] Layar Editor (skala 2×/4×; preset Lanjutan menyusul)
@@ -84,13 +85,13 @@ Tujuan: membuktikan jalur teknis dan mengukur performa di HP sendiri.
 - [x] Layar Hasil (pembanding geser + cubit-zoom + alternatif tombol + simpan manual)
 - [x] Layar Error (inline di Editor/Hasil)
 - [x] Tema gelap (default) dan terang; font dibundel lokal
-- [ ] Pemetaan preset → parameter teknis
+- [ ] Pemetaan preset → parameter teknis (preset Lanjutan ditunda; sementara skala 2×/4× + format)
 
 ### 1.3 P1
 - [x] Riwayat (JSON di `filesDir`, maks 60 entri, layar daftar + detail) (FR-08)
 - [x] Pengaturan (tema, skala bawaan, bersihkan cache, versi) (FR-09)
-- [ ] Batch foto (FR-11)
-- [ ] Onboarding satu layar ("offline & privat")
+- [x] Batch foto (FR-11) — satu job banyak foto, berurutan, batal = seluruh antrian, maks 20 foto
+- [x] Onboarding satu layar ("offline & privat") — `/mulai`, tampil sekali, tombol Mulai
 
 ### 1.4 Notifikasi & ketahanan proses (FR-12, FR-13) — selesai
 - [x] `ProsesNotif.kt`: kanal `arulume.proses` (LOW, ongoing, bar progres) dan `arulume.hasil`
@@ -109,9 +110,9 @@ Tujuan: membuktikan jalur teknis dan mengukur performa di HP sendiri.
 - [ ] 20 proses berturut-turut: tanpa crash, memori stabil
 - [ ] Uji rotasi layar dan background/foreground saat proses
 - [ ] Audit aksesibilitas dasar (kontras, target sentuh, TalkBack)
-- [ ] Ikon aplikasi (adaptive icon) dan nama aplikasi
-- [ ] `allowBackup="false"`, deklarasi Vulkan opsional
-- [ ] Lengkapi `THIRD_PARTY.md` dan layar "Tentang & lisensi"
+- [x] Ikon aplikasi (adaptive + monokrom + 5 densitas PNG) dan splash
+- [x] `allowBackup="false"`, deklarasi Vulkan opsional
+- [x] Lengkapi `THIRD_PARTY.md` dan layar "Tentang & lisensi" (di Pengaturan)
 - [ ] Build rilis bertanda tangan (lihat `BUILD.md`), ukuran ≤ 60 MB
 
 **Kriteria keluar Fase 1:** seluruh Definition of Done Fase 1 (PRD bagian 22) terpenuhi.

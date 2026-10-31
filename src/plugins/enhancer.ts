@@ -64,7 +64,13 @@ export type JobStage = "decoding" | "enhancing" | "encoding" | "saving";
 export interface ProgressEvent {
   jobId: string;
   stage: JobStage;
+  /** Persen seluruh job (batch: gabungan semua foto). */
   percent: number; // 0..100
+  /** Persen foto yang sedang diproses saja (batch). */
+  itemPercent?: number;
+  /** Indeks foto saat ini, mulai 0 (batch). */
+  index?: number;
+  total?: number;
   tileIndex?: number;
   tileTotal?: number;
   etaSec?: number;
@@ -72,6 +78,14 @@ export interface ProgressEvent {
 
 export interface CompletedEvent {
   jobId: string;
+  /** Jumlah foto yang diminta (1 untuk job tunggal). */
+  total?: number;
+  /** Jumlah foto yang berhasil / gagal (batch). */
+  ok?: number;
+  failed?: number;
+  cancelled?: boolean;
+  /** Daftar hasil per foto, urut sesuai pilihan (batch). */
+  entries?: CompletedEvent[];
   /**
    * Path hasil resolusi penuh di cache aplikasi. Belum masuk galeri: user
    * melihat dulu di layar Hasil, lalu memanggil `saveToGallery`.
@@ -158,6 +172,39 @@ export interface JobStatus {
   stage?: JobStage | "done" | "failed" | "idle";
   percent?: number;
   aktif: boolean;
+  /** Indeks foto yang sedang diproses (batch). */
+  index?: number;
+  total?: number;
+}
+
+/** Hasil satu foto di dalam antrian batch. */
+export interface ItemDoneEvent {
+  jobId: string;
+  index: number;
+  total: number;
+  entry: CompletedEvent;
+}
+
+/** Satu foto gagal; antrian batch tetap lanjut ke foto berikutnya. */
+export interface ItemFailedEvent {
+  jobId: string;
+  index: number;
+  total: number;
+  code: ErrorCode;
+  message: string;
+}
+
+export interface BatchOptions {
+  uris: string[];
+  model: ModelId;
+  scale: number;
+  tileSize?: number;
+  useGpu?: boolean;
+  maxOutputLongSide?: number;
+  output?: {
+    format: "jpeg" | "png" | "webp";
+    quality?: number;
+  };
 }
 
 export interface EnhancerPlugin {
@@ -172,13 +219,19 @@ export interface EnhancerPlugin {
   pickMedia(opts: {
     type: "image" | "video";
     multiple?: boolean;
-  }): Promise<{ items: PickedMedia[] }>;
+    /** Batas atas saat `multiple` (default & maksimum 20). */
+    maxItems?: number;
+  }): Promise<{ items: PickedMedia[]; skipped?: number }>;
   /**
    * Hasil pemilih foto yang terselamatkan setelah proses aplikasi mati saat
    * pemilih di depan. `items` kosong kalau tidak ada yang tertunda.
    */
   getPendingPick(): Promise<{ items: PickedMedia[] }>;
   startEnhanceImage(opts: EnhanceImageOptions): Promise<{ jobId: string }>;
+  /** Memproses beberapa foto berurutan dalam satu job (PRD FR-11). */
+  startEnhanceBatch(
+    opts: BatchOptions,
+  ): Promise<{ jobId: string; total: number }>;
   /** Menyalin hasil dari cache ke galeri `Pictures/Arulume`. */
   saveToGallery(opts: { path: string; quality?: number }): Promise<SavedResult>;
   cancelJob(opts: { jobId: string }): Promise<void>;
@@ -208,6 +261,14 @@ export interface EnhancerPlugin {
   addListener(
     ev: "failed",
     fn: (e: FailedEvent) => void,
+  ): Promise<PluginListenerHandle>;
+  addListener(
+    ev: "itemDone",
+    fn: (e: ItemDoneEvent) => void,
+  ): Promise<PluginListenerHandle>;
+  addListener(
+    ev: "itemFailed",
+    fn: (e: ItemFailedEvent) => void,
   ): Promise<PluginListenerHandle>;
 }
 

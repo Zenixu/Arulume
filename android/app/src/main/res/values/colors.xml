@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Token warna Arulume (Docs/design.md). Dipakai tema native & splash. -->
+    <color name="brand_bg">#111214</color>
+    <color name="brand_accent">#F5B83D</color>
+    <color name="colorPrimary">#F5B83D</color>
+    <color name="colorPrimaryDark">#111214</color>
+    <color name="colorAccent">#F5B83D</color>
+</resources>

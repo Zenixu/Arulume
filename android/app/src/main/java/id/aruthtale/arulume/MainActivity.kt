@@ -2,6 +2,7 @@ package id.aruthtale.arulume
 
 import android.app.Activity
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
 import com.getcapacitor.BridgeActivity
@@ -56,11 +57,21 @@ class MainActivity : BridgeActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == EnhancerPlugin.REQ_PICK) {
             val ok = resultCode == Activity.RESULT_OK
-            val uri = data?.data
-            if (ok && uri != null) {
-                EnhancerPlugin.rememberPick(applicationContext, uri)
+            val uris = ArrayList<Uri>()
+            if (ok && data != null) {
+                // Pilihan banyak foto datang sebagai ClipData; satu foto lewat `data`.
+                val clip = data.clipData
+                if (clip != null) {
+                    for (i in 0 until clip.itemCount) {
+                        clip.getItemAt(i)?.uri?.let { uris.add(it) }
+                    }
+                }
+                data.data?.let { if (!uris.contains(it)) uris.add(it) }
             }
-            EnhancerPlugin.deliverPick(ok, uri)
+            if (uris.isNotEmpty()) {
+                EnhancerPlugin.rememberPick(applicationContext, uris)
+            }
+            EnhancerPlugin.deliverPick(ok, uris)
         }
         super.onActivityResult(requestCode, resultCode, data)
     }

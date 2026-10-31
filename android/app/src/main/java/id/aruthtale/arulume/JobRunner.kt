@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.SystemClock
 import android.util.Log
+import com.getcapacitor.JSArray
 import com.getcapacitor.JSObject
 import org.json.JSONObject
 import java.io.File
@@ -17,6 +18,9 @@ import java.util.concurrent.atomic.AtomicInteger
 /**
  * Pelaksana job perbesar foto — dipisah dari plugin supaya pekerjaan tetap
  * hidup walau WebView/Activity sudah tidak ada (lihat [EnhancerService]).
+ *
+ * Mendukung satu foto maupun batch (PRD FR-11): foto diproses **berurutan**,
+ * satu kegagalan tidak menghentikan antrian, batal menghentikan seluruh antrian.
  *
  * Aturan yang dijaga:
  * - Semua kerja berat di thread `enhancer-worker` (Docs/AGENTS.md #3).
@@ -31,33 +35,39 @@ object JobRunner {
     /** Parameter satu pekerjaan; bisa dikirim lewat Intent ke layanan. */
     data class Params(
         val jobId: String,
-        val uri: String,
+        val uris: List<String>,
         val modelId: String,
         val scale: Int,
         val useGpu: Boolean,
         val tileSize: Int,
         val maxOutputLongSide: Int,
         val quality: Int,
+        val format: String,
     ) {
+        val total: Int get() = uris.size
+
         fun keIntent(i: Intent): Intent = i
             .putExtra("jobId", jobId)
-            .putExtra("uri", uri)
+            .putStringArrayListExtra("uris", ArrayList(uris))
             .putExtra("modelId", modelId)
             .putExtra("scale", scale)
             .putExtra("useGpu", useGpu)
             .putExtra("tileSize", tileSize)
             .putExtra("maxOutputLongSide", maxOutputLongSide)
             .putExtra("quality", quality)
+            .putExtra("format", format)
 
         companion object {
             fun dariIntent(i: Intent?): Params? {
                 if (i == null) return null
                 val jobId = i.getStringExtra("jobId") ?: return null
-                val uri = i.getStringExtra("uri") ?: return null
+                val uris = i.getStringArrayListExtra("uris")?.filter { it.isNotBlank() }
+                    ?: listOfNotNull(i.getStringExtra("uri"))
+                if (uris.isEmpty()) return null
                 val modelId = i.getStringExtra("modelId") ?: return null
                 return Params(
                     jobId = jobId,
-                    uri = uri,
+                    uris = uris,
                     modelId = modelId,
                     scale = i.getIntExtra("scale", 2).coerceIn(2, 4),
                     useGpu = i.getBooleanExtra("useGpu", false),
@@ -67,6 +77,7 @@ object JobRunner {
                         ImagePipeline.MAX_OUTPUT_SIDE,
                     ),
                     quality = i.getIntExtra("quality", 95).coerceIn(60, 100),
+                    format = i.getStringExtra("format") ?: "jpeg",
                 )
             }
         }
@@ -78,6 +89,8 @@ object JobRunner {
         val stage: String,
         val percent: Int,
         val aktif: Boolean,
+        val index: Int = 0,
+        val total: Int = 1,
     )
 
     private val executor = Executors.newSingleThreadExecutor { r ->
@@ -110,7 +123,7 @@ object JobRunner {
     fun mulai(ctx: Context, p: Params) {
         val batal = AtomicBoolean(false)
         jobAktif = p.jobId to batal
-        status = Status(p.jobId, "decoding", 0, true)
+        status = Status(p.jobId, "decoding", 0, true, 0, p.total)
         executor.execute { jalankan(ctx.applicationContext, p, batal) }
     }
 
@@ -124,17 +137,147 @@ object JobRunner {
     // ------------------------------------------------------------- pelaksanaan
 
     private fun jalankan(ctx: Context, p: Params, batal: AtomicBoolean) {
+        val total = p.total
+        val sukses = ArrayList<JSObject>(total)
+        var gagal = 0
+        try {
+            for ((indeks, uriStr) in p.uris.withIndex()) {
+                if (batal.get()) break
+                val hasil = try {
+                    prosesSatu(ctx, p, uriStr, batal, indeks, total)
+                } catch (e: OutOfMemoryError) {
+                    Log.e(TAG, "Foto ${indeks + 1} kehabisan memori", e)
+                    null
+                } catch (t: Throwable) {
+                    Log.e(TAG, "Foto ${indeks + 1} gagal", t)
+                    null
+                }
+
+                if (hasil == null) {
+                    gagal++
+                    if (total == 1) {
+                        // Job tunggal: tetap pakai event `failed` seperti kontrak lama.
+                        gagalSatu(ctx, p.jobId, "E_DECODE_FAILED", "Foto tidak bisa dibaca")
+                        return
+                    }
+                    kirim(
+                        "itemFailed",
+                        JSObject()
+                            .put("jobId", p.jobId)
+                            .put("index", indeks)
+                            .put("total", total)
+                            .put("code", "E_ITEM_FAILED")
+                            .put("message", "Foto ini gagal diproses"),
+                    )
+                } else {
+                    sukses.add(hasil)
+                    kirim(
+                        "itemDone",
+                        JSObject()
+                            .put("jobId", p.jobId)
+                            .put("index", indeks)
+                            .put("total", total)
+                            .put("entry", hasil),
+                    )
+                }
+            }
+
+            if (batal.get() && sukses.isEmpty()) {
+                gagalSatu(ctx, p.jobId, "E_CANCELLED", "Dibatalkan")
+                return
+            }
+
+            status = Status(p.jobId, "done", 100, false, total - 1, total)
+            val ringkas = JSObject()
+                .put("jobId", p.jobId)
+                .put("total", total)
+                .put("ok", sukses.size)
+                .put("failed", gagal)
+                .put("cancelled", batal.get())
+            val arr = JSArray()
+            sukses.forEach { arr.put(it) }
+            ringkas.put("entries", arr)
+            // Kompatibilitas job tunggal: layar Hasil membaca field di akar objek.
+            sukses.firstOrNull()?.let { satu ->
+                for (k in satu.keys()) ringkas.put(k, satu.get(k))
+            }
+            kirim("completed", ringkas)
+
+            val judul = when {
+                batal.get() -> "Proses dihentikan"
+                total == 1 -> "Foto selesai diperbesar"
+                gagal == 0 -> "$total foto selesai diperbesar"
+                else -> "${sukses.size} dari $total foto selesai"
+            }
+            val teks = when {
+                total == 1 && sukses.isNotEmpty() ->
+                    "Ketuk untuk melihat hasil " +
+                        "${sukses[0].optInt("outputWidth")}×${sukses[0].optInt("outputHeight")}."
+                total == 1 -> "Foto tidak diubah."
+                gagal == 0 -> "Ketuk untuk melihat hasil."
+                else -> "$gagal foto gagal diproses."
+            }
+            EnhancerService.selesai(ctx, judul, teks)
+        } catch (t: Throwable) {
+            Log.e(TAG, "Job ${p.jobId} gagal total", t)
+            gagalSatu(ctx, p.jobId, "E_UNKNOWN", t.message ?: "Terjadi kesalahan")
+        } finally {
+            if (jobAktif?.first == p.jobId) jobAktif = null
+        }
+    }
+
+    /**
+     * Memproses satu foto. Mengembalikan objek hasil (untuk `itemDone`) atau
+     * `null` kalau foto ini gagal — antrian batch tetap lanjut.
+     */
+    private fun prosesSatu(
+        ctx: Context,
+        p: Params,
+        uriStr: String,
+        batal: AtomicBoolean,
+        indeks: Int,
+        total: Int,
+    ): JSObject? {
         val t0 = SystemClock.elapsedRealtime()
+        val fmt = ImagePipeline.OutFormat.dari(p.format)
         var handle = 0L
         var src: Bitmap? = null
         var result: Bitmap? = null
-        val judul = "Memperbesar foto ${p.scale}×"
-        try {
-            ImagePipeline.pruneResults(ctx)
-            lapor(p.jobId, "decoding", 3)
-            perbaruiNotif(ctx, judul, "Membaca foto…", 3)
+        // Notifikasi: satu bar progres untuk seluruh antrian.
+        val judul = if (total > 1) {
+            "Memperbesar ${indeks + 1} dari $total"
+        } else {
+            "Memperbesar foto ${p.scale}×"
+        }
 
-            val uri = Uri.parse(p.uri)
+        fun persenTotal(dalamItem: Int): Int =
+            if (total <= 1) dalamItem else ((indeks * 100 + dalamItem) / total).coerceIn(0, 100)
+
+        fun laporItem(stage: String, dalamItem: Int) {
+            val totalPersen = persenTotal(dalamItem)
+            status = Status(p.jobId, stage, totalPersen, true, indeks, total)
+            kirim(
+                "progress",
+                JSObject()
+                    .put("jobId", p.jobId)
+                    .put("stage", stage)
+                    .put("percent", totalPersen)
+                    .put("itemPercent", dalamItem)
+                    .put("index", indeks)
+                    .put("total", total),
+            )
+        }
+
+        fun notif(teks: String, dalamItem: Int) {
+            ProsesNotif.perbarui(ctx, judul, teks, persenTotal(dalamItem))
+        }
+
+        try {
+            ImagePipeline.pruneResults(ctx, keep = maxOf(3, total))
+            laporItem("decoding", 3)
+            notif("Membaca foto…", 3)
+
+            val uri = Uri.parse(uriStr)
             val inputCap = (p.maxOutputLongSide / p.scale).coerceAtLeast(64)
             // Berkas hilang / bukan gambar melempar exception, bukan null —
             // ditangkap di sini supaya pesannya ramah, bukan teks ENOENT.
@@ -145,14 +288,17 @@ object JobRunner {
                 null
             }
             if (src == null) {
-                gagal(ctx, p.jobId, "E_DECODE_FAILED", "Foto tidak bisa dibaca")
-                return
+                Log.w(TAG, "Foto ${indeks + 1} tidak bisa dibaca")
+                return null
             }
-            if (batal.get()) {
-                gagal(ctx, p.jobId, "E_CANCELLED", "Dibatalkan")
-                return
-            }
-            lapor(p.jobId, "decoding", 10)
+            if (batal.get()) return null
+
+            // PNG/WebP transparan: engine native bekerja di RGB, jadi alpha
+            // diratakan ke putih lebih dulu supaya tidak jadi hitam. Bitmap asli
+            // disimpan supaya topeng alpha bisa dipasang lagi di hasil (TC-04).
+            val sumberAlpha = if (src.hasAlpha()) src else null
+            src = ImagePipeline.ratakanAlpha(src)
+            laporItem("decoding", 10)
 
             val beforePath = ImagePipeline.writePreview(ctx, src, 720)
 
@@ -165,85 +311,99 @@ object JobRunner {
             val threads = maxOf(1, Runtime.getRuntime().availableProcessors() / 2)
             handle = EnhancerNative.nativeCreate(param.absolutePath, bin.absolutePath, threads, p.useGpu)
             if (handle == 0L) {
-                gagal(ctx, p.jobId, "E_MODEL_MISSING", "Model gagal dimuat")
-                return
+                Log.w(TAG, "Model gagal dimuat")
+                return null
             }
-            lapor(p.jobId, "decoding", 15)
-            perbaruiNotif(ctx, judul, "Menyiapkan mesin…", 15)
+            laporItem("decoding", 15)
+            notif("Menyiapkan mesin…", 15)
 
             val w = src.width
             val h = src.height
             // Pemotongan wajib di atas 512 px: satu lintasan 1024² mematikan proses.
-            val tile = if (p.tileSize > 0) p.tileSize else if (maxOf(w, h) > 512) 256 else 0
+            var tile = if (p.tileSize > 0) p.tileSize else if (maxOf(w, h) > 512) 256 else 0
 
             val px = ImagePipeline.toArgb(src)
             var persenTerakhir = 15
 
-            val outPx = EnhancerNative.nativeUpscale(
-                handle, px, w, h, tile, 16,
-                EnhancerNative.TileProgress { selesai, total ->
-                    if (batal.get()) return@TileProgress
-                    val bagian = if (total > 0) selesai.toFloat() / total else 1f
-                    // Inferensi menempati rentang 15–88%.
-                    val persen = 15 + (bagian * 73).toInt()
-                    if (persen - persenTerakhir >= 3) {
-                        persenTerakhir = persen
-                        lapor(p.jobId, "enhancing", persen)
-                        perbaruiNotif(
-                            ctx, judul,
-                            "Memperbesar… $persen%  ($selesai/$total bagian)",
-                            persen,
-                        )
-                    }
-                },
-            )
+            // Fallback bertahap (PRD FR-03): kalau tile pertama kehabisan memori,
+            // coba tile lebih kecil sebelum menyerah.
+            var outPx: IntArray? = null
+            var percobaan = 0
+            while (outPx == null && percobaan < 3) {
+                if (batal.get()) return null
+                outPx = EnhancerNative.nativeUpscale(
+                    handle, px, w, h, tile, 16,
+                    EnhancerNative.TileProgress { selesai, bagian ->
+                        if (batal.get()) return@TileProgress
+                        val frac = if (bagian > 0) selesai.toFloat() / bagian else 1f
+                        // Inferensi menempati rentang 15–88% di dalam satu foto.
+                        val dalamItem = 15 + (frac * 73).toInt()
+                        if (dalamItem - persenTerakhir >= 3) {
+                            persenTerakhir = dalamItem
+                            laporItem("enhancing", dalamItem)
+                            notif("Memperbesar… $dalamItem%  ($selesai/$bagian bagian)", dalamItem)
+                        }
+                    },
+                )
+                if (outPx == null) {
+                    percobaan++
+                    if (tile <= 96) break
+                    tile = maxOf(96, tile / 2)
+                    Log.w(TAG, "Tile kehabisan memori, coba tile=$tile (percobaan $percobaan)")
+                    notif("Mencoba ulang dengan potongan lebih kecil…", 40)
+                }
+            }
             if (outPx == null) {
-                gagal(ctx, p.jobId, "E_OUT_OF_MEMORY", "Kehabisan memori saat memproses")
-                return
+                Log.w(TAG, "Inferensi gagal setelah $percobaan percobaan")
+                return null
             }
             Log.i(TAG, "Sumber ${w}x$h → hasil ${w * p.scale}x${h * p.scale}, tile=$tile")
-            lapor(p.jobId, "enhancing", 88)
+            laporItem("enhancing", 88)
 
-            if (batal.get()) {
-                gagal(ctx, p.jobId, "E_CANCELLED", "Dibatalkan")
-                return
-            }
+            if (batal.get()) return null
 
-            perbaruiNotif(ctx, judul, "Menyiapkan hasil…", 92)
+            notif("Menyiapkan hasil…", 92)
             result = ImagePipeline.fromArgb(outPx, w * p.scale, h * p.scale)
-            lapor(p.jobId, "encoding", 93)
+            if (sumberAlpha != null) {
+                if (fmt != ImagePipeline.OutFormat.JPEG) {
+                    result = ImagePipeline.pasangAlpha(result, sumberAlpha)
+                }
+                sumberAlpha.recycle()
+            }
+            laporItem("encoding", 93)
 
             val afterPath = ImagePipeline.writePreview(ctx, result, 1080)
-            lapor(p.jobId, "saving", 96)
-            perbaruiNotif(ctx, judul, "Menyimpan hasil…", 96)
+            laporItem("saving", 96)
+            notif("Menyimpan hasil…", 96)
 
             // PRD FR-06 (revisi): hasil TIDAK langsung masuk galeri. User melihat
             // dulu di layar Hasil, baru menekan Simpan → `saveToGallery`.
-            val file = ImagePipeline.writeResult(ctx, result, p.quality)
+            val file = ImagePipeline.writeResult(ctx, result, p.quality, fmt)
             if (file == null) {
-                gagal(ctx, p.jobId, "E_SAVE_FAILED", "Gagal menyiapkan hasil")
-                return
+                Log.w(TAG, "Gagal menulis hasil")
+                return null
             }
 
-            lapor(p.jobId, "done", 100)
+            val durationMs = SystemClock.elapsedRealtime() - t0
             val done = JSObject()
                 .put("jobId", p.jobId)
                 .put("resultPath", file.absolutePath)
                 .put("outputUri", "")
                 .put("outputWidth", result.width)
                 .put("outputHeight", result.height)
-                .put("durationMs", SystemClock.elapsedRealtime() - t0)
+                .put("durationMs", durationMs)
                 .put("usedGpu", p.useGpu)
                 .put("tileSizeUsed", tile)
+                .put("format", fmt.ext)
                 .put("beforePreviewPath", beforePath)
                 .put("afterPreviewPath", afterPath)
-            Log.i(TAG, "Job selesai: ${done.toString()}")
+            Log.i(TAG, "Foto ${indeks + 1}/$total selesai: ${done.toString()}")
 
             // Riwayat (PRD FR-08): satu entri per hasil, disimpan di filesDir.
             Riwayat.add(
                 ctx,
                 JSONObject()
-                    .put("id", p.jobId)
+                    .put("id", if (total > 1) "${p.jobId}-${indeks + 1}" else p.jobId)
                     .put("createdAt", System.currentTimeMillis())
                     .put("model", p.modelId)
                     .put("scale", p.scale)
@@ -251,27 +411,14 @@ object JobRunner {
                     .put("srcHeight", h)
                     .put("outWidth", result.width)
                     .put("outHeight", result.height)
-                    .put("durationMs", done.getLong("durationMs"))
+                    .put("durationMs", durationMs)
                     .put("resultPath", file.absolutePath)
                     .put("beforePreviewPath", beforePath)
                     .put("afterPreviewPath", afterPath)
                     .put("savedUri", "")
                     .put("savedName", ""),
             )
-
-            status = Status(p.jobId, "done", 100, false)
-            kirim("completed", done)
-            EnhancerService.selesai(
-                ctx,
-                "Foto selesai diperbesar",
-                "Ketuk untuk melihat hasil ${result.width}×${result.height}.",
-            )
-        } catch (e: OutOfMemoryError) {
-            Log.e(TAG, "Job ${p.jobId} kehabisan memori", e)
-            gagal(ctx, p.jobId, "E_OUT_OF_MEMORY", "Kehabisan memori saat memproses")
-        } catch (t: Throwable) {
-            Log.e(TAG, "Job ${p.jobId} gagal", t)
-            gagal(ctx, p.jobId, "E_UNKNOWN", t.message ?: "Terjadi kesalahan")
+            return done
         } finally {
             if (handle != 0L) {
                 try {
@@ -282,19 +429,11 @@ object JobRunner {
             }
             src?.recycle()
             result?.recycle()
-            if (jobAktif?.first == p.jobId) jobAktif = null
         }
     }
 
-    private fun lapor(jobId: String, stage: String, percent: Int) {
-        status = Status(jobId, stage, percent, true)
-        kirim(
-            "progress",
-            JSObject().put("jobId", jobId).put("stage", stage).put("percent", percent),
-        )
-    }
-
-    private fun gagal(ctx: Context, jobId: String, code: String, pesan: String) {
+    /** Kegagalan yang menghentikan seluruh job (tunggal atau antrian batal). */
+    private fun gagalSatu(ctx: Context, jobId: String, code: String, pesan: String) {
         Log.w(TAG, "Job $jobId gagal: $code — $pesan")
         status = Status(jobId, "failed", 0, false)
         kirim(
@@ -311,10 +450,6 @@ object JobRunner {
             else -> "Gagal memperbesar foto" to pesan
         }
         EnhancerService.selesai(ctx, judul, teks)
-    }
-
-    private fun perbaruiNotif(ctx: Context, judul: String, teks: String, persen: Int) {
-        ProsesNotif.perbarui(ctx, judul, teks, persen)
     }
 
     private fun kirim(event: String, data: JSObject) {

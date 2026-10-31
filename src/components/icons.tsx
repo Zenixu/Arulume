@@ -97,6 +97,24 @@ export function IconTrash({ className, size = 24 }: IconProps) {
   );
 }
 
+export function IconLock({ className, size = 24 }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <rect x="4.5" y="10.5" width="15" height="9.5" rx="2.5" />
+      <path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" />
+    </svg>
+  );
+}
+
+export function IconSparkle({ className, size = 24 }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M12 3.5l1.9 5.1 5.1 1.9-5.1 1.9L12 17.5l-1.9-5.1L5 10.5l5.1-1.9z" />
+      <path d="M18.5 15.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z" />
+    </svg>
+  );
+}
+
 export function IconClock({ className, size = 24 }: IconProps) {
   return (
     <svg {...base(size)} className={className}>

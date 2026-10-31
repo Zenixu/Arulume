@@ -65,6 +65,63 @@ export function bacaSkalaBawaan(): 2 | 4 {
   }
 }
 
+const K_ONBOARDING = "arulume.onboarding";
+
+/** Onboarding hanya tampil sekali; disimpan lokal, tidak butuh jaringan. */
+export function bacaOnboarding(): boolean {
+  if (typeof window === "undefined") return true;
+  try {
+    return window.localStorage.getItem(K_ONBOARDING) === "1";
+  } catch {
+    return true;
+  }
+}
+
+export function simpanOnboarding() {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(K_ONBOARDING, "1");
+  } catch {
+    // abaikan
+  }
+}
+
+/** Format berkas hasil. JPEG paling kecil; PNG/WebP untuk kualitas tanpa rugi. */
+export type Format = "jpeg" | "png" | "webp";
+
+const K_FORMAT = "arulume.format";
+
+export const LABEL_FORMAT: Record<Format, string> = {
+  jpeg: "JPG",
+  png: "PNG",
+  webp: "WebP",
+};
+
+export const KETERANGAN_FORMAT: Record<Format, string> = {
+  jpeg: "Paling kecil, cocok untuk dibagikan.",
+  png: "Tanpa kompresi rugi, berkas lebih besar.",
+  webp: "Kecil tapi tetap tajam.",
+};
+
+export function bacaFormat(): Format {
+  if (typeof window === "undefined") return "jpeg";
+  try {
+    const v = window.localStorage.getItem(K_FORMAT);
+    return v === "png" || v === "webp" ? v : "jpeg";
+  } catch {
+    return "jpeg";
+  }
+}
+
+export function simpanFormat(f: Format) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(K_FORMAT, f);
+  } catch {
+    // abaikan
+  }
+}
+
 export function simpanSkalaBawaan(s: 2 | 4) {
   if (typeof window === "undefined") return;
   try {

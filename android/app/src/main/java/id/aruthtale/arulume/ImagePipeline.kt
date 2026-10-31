@@ -4,6 +4,8 @@ import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.Matrix
 import android.media.MediaScannerConnection
 import android.net.Uri
@@ -79,6 +81,12 @@ object ImagePipeline {
     }
 
     fun decode(ctx: Context, uri: Uri, maxSide: Int): Bitmap? {
+        // Berkas terpotong (salinan belum selesai / kartu rusak) tetap "berhasil"
+        // didekode oleh BitmapFactory dengan sisa area abu-abu. Periksa penutup
+        // berkas lebih dulu supaya user dapat pesan jelas, bukan hasil separuh.
+        if (!berkasUtuh(ctx, uri)) {
+            throw java.io.IOException("Foto sepertinya rusak atau belum selesai disalin")
+        }
         val probe = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         ctx.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, probe) }
         val longest = maxOf(probe.outWidth, probe.outHeight)
@@ -173,9 +181,66 @@ object ImagePipeline {
         return f.absolutePath
     }
 
-    private fun fileName(): String {
+    /**
+     * Format keluaran yang didukung. `quality` hanya berpengaruh pada JPEG/WebP.
+     * Catatan jujur: engine native bekerja di RGB, jadi kanal alpha dari PNG/WebP
+     * sumber diratakan ke putih sebelum diproses (lihat [ratakanAlpha]).
+     */
+    enum class OutFormat(
+        val ext: String,
+        val mime: String,
+        val compress: Bitmap.CompressFormat,
+    ) {
+        JPEG("jpg", "image/jpeg", Bitmap.CompressFormat.JPEG),
+        PNG("png", "image/png", Bitmap.CompressFormat.PNG),
+        WEBP("webp", "image/webp", Bitmap.CompressFormat.WEBP);
+
+        companion object {
+            fun dari(nama: String?): OutFormat = when (nama?.lowercase(Locale.US)) {
+                "png" -> PNG
+                "webp" -> WEBP
+                else -> JPEG
+            }
+        }
+    }
+
+    /**
+     * Tempelkan gambar transparan di atas latar putih. Tanpa ini, area transparan
+     * jadi hitam karena engine native memakai 3 kanal.
+     */
+    fun ratakanAlpha(bmp: Bitmap): Bitmap {
+        if (!bmp.hasAlpha()) return bmp
+        val out = Bitmap.createBitmap(bmp.width, bmp.height, Bitmap.Config.ARGB_8888)
+        val c = Canvas(out)
+        c.drawColor(Color.WHITE)
+        c.drawBitmap(bmp, 0f, 0f, null)
+        // Sengaja tidak me-recycle `bmp`: pemanggil masih perlu bitmap sumber
+        // untuk memasang kembali topeng alpha (lihat [pasangAlpha]).
+        return out
+    }
+
+    /**
+     * Kembalikan transparansi sumber ke hasil (TC-04). Engine native hanya RGB,
+     * jadi alpha hilang saat inferensi; topeng diambil dari bitmap sumber lalu
+     * diskalakan ke ukuran hasil. Hanya dipakai untuk PNG/WebP.
+     */
+    fun pasangAlpha(hasil: Bitmap, sumber: Bitmap): Bitmap {
+        if (!sumber.hasAlpha()) return hasil
+        val lebar = hasil.width
+        val tinggi = hasil.height
+        val skala = Bitmap.createScaledBitmap(sumber, lebar, tinggi, true)
+        val px = toArgb(hasil)
+        val mask = toArgb(skala)
+        for (i in px.indices) {
+            px[i] = (px[i] and 0x00FFFFFF) or (mask[i] and 0xFF000000.toInt())
+        }
+        if (skala != sumber) skala.recycle()
+        return Bitmap.createBitmap(px, lebar, tinggi, Bitmap.Config.ARGB_8888)
+    }
+
+    private fun fileName(ext: String = "jpg"): String {
         val stamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
-        return "Arulume_$stamp.jpg"
+        return "Arulume_$stamp.$ext"
     }
 
     /**
@@ -185,9 +250,25 @@ object ImagePipeline {
     fun resultsDir(ctx: Context): File = File(ctx.cacheDir, "hasil").apply { mkdirs() }
 
     /** Tulis hasil resolusi penuh ke cache; belum menyentuh galeri. */
-    fun writeResult(ctx: Context, bmp: Bitmap, quality: Int): File? = try {
-        val f = File(resultsDir(ctx), fileName())
-        FileOutputStream(f).use { bmp.compress(Bitmap.CompressFormat.JPEG, quality, it) }
+    fun writeResult(
+        ctx: Context,
+        bmp: Bitmap,
+        quality: Int,
+        format: OutFormat = OutFormat.JPEG,
+    ): File? = try {
+        // Batch bisa menyelesaikan dua foto di detik yang sama; jangan menimpa
+        // hasil sebelumnya — beri akhiran -2, -3, dst.
+        var f = File(resultsDir(ctx), fileName(format.ext))
+        var n = 1
+        while (f.exists()) {
+            n++
+            f = File(resultsDir(ctx), fileName(format.ext).replace(".${format.ext}", "-$n.${format.ext}"))
+        }
+        // JPEG tidak punya kanal alpha: tempel ke putih dulu supaya area
+        // transparan tidak jadi hitam.
+        val siap = if (format == OutFormat.JPEG) ratakanAlpha(bmp.copy(Bitmap.Config.ARGB_8888, false)) else bmp
+        FileOutputStream(f).use { siap.compress(format.compress, quality, it) }
+        if (siap != bmp) siap.recycle()
         f
     } catch (t: Throwable) {
         Log.e(TAG, "Tulis hasil sementara gagal", t)
@@ -198,6 +279,58 @@ object ImagePipeline {
     fun pruneResults(ctx: Context, keep: Int = 3) {
         val files = resultsDir(ctx).listFiles()?.sortedByDescending { it.lastModified() } ?: return
         files.drop(keep).forEach { runCatching { it.delete() } }
+    }
+
+    /**
+     * Cek penanda akhir berkas: JPEG harus punya EOI (FF D9), PNG harus punya
+     * chunk IEND. Selain itu dianggap utuh (mis. HEIC/WebP) karena tidak ada
+     * penanda murah yang bisa diperiksa.
+     *
+     * Berkas dibaca penuh (maks 24 MB) karena `FileChannel.position()` pada
+     * descriptor `content://` tidak selalu dihormati; foto normal jauh di bawah
+     * batas itu dan biaya bacanya kecil dibanding inferensi.
+     */
+    private fun berkasUtuh(ctx: Context, uri: Uri): Boolean {
+        val batas = 24 * 1024 * 1024
+        val data = try {
+            ctx.contentResolver.openInputStream(uri)?.use { ins ->
+                val out = java.io.ByteArrayOutputStream(64 * 1024)
+                val buf = ByteArray(64 * 1024)
+                while (true) {
+                    val r = ins.read(buf)
+                    if (r <= 0) break
+                    out.write(buf, 0, r)
+                    if (out.size() > batas) return true // terlalu besar: lewati pemeriksaan
+                }
+                out.toByteArray()
+            } ?: return true
+        } catch (t: Throwable) {
+            Log.w(TAG, "Tidak bisa memeriksa berkas: ${t.message}")
+            return true
+        }
+        if (data.size < 16) return true
+
+        val jpeg = (data[0].toInt() and 0xFF) == 0xFF && (data[1].toInt() and 0xFF) == 0xD8
+        val png = (data[0].toInt() and 0xFF) == 0x89 && data[1].toInt() == 0x50
+        val awal = maxOf(0, data.size - 1024)
+        fun ada(vararg pola: Int): Boolean {
+            for (i in awal..(data.size - pola.size)) {
+                var cocok = true
+                for (j in pola.indices) {
+                    if ((data[i + j].toInt() and 0xFF) != pola[j]) {
+                        cocok = false
+                        break
+                    }
+                }
+                if (cocok) return true
+            }
+            return false
+        }
+        return when {
+            jpeg -> ada(0xFF, 0xD9)
+            png -> ada(0x49, 0x45, 0x4E, 0x44) // "IEND"
+            else -> true
+        }
     }
 
     fun decodeFile(path: String): Bitmap? = try {
@@ -211,13 +344,18 @@ object ImagePipeline {
      * Simpan ke galeri `Pictures/Arulume`.
      * API 29+ memakai `IS_PENDING` supaya berkas tidak tampil setengah jadi.
      */
-    fun saveToGallery(ctx: Context, bmp: Bitmap, quality: Int): Saved? {
-        val name = fileName()
+    fun saveToGallery(
+        ctx: Context,
+        bmp: Bitmap,
+        quality: Int,
+        format: OutFormat = OutFormat.JPEG,
+    ): Saved? {
+        val name = fileName(format.ext)
         return try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                saveScoped(ctx, bmp, name, quality)
+                saveScoped(ctx, bmp, name, quality, format)
             } else {
-                saveLegacy(ctx, bmp, name, quality)
+                saveLegacy(ctx, bmp, name, quality, format)
             }
         } catch (t: Throwable) {
             Log.e(TAG, "Simpan ke galeri gagal", t)
@@ -225,18 +363,24 @@ object ImagePipeline {
         }
     }
 
-    private fun saveScoped(ctx: Context, bmp: Bitmap, name: String, quality: Int): Saved? {
+    private fun saveScoped(
+        ctx: Context,
+        bmp: Bitmap,
+        name: String,
+        quality: Int,
+        format: OutFormat,
+    ): Saved? {
         val resolver = ctx.contentResolver
         val values = ContentValues().apply {
             put(MediaStore.Images.Media.DISPLAY_NAME, name)
-            put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+            put(MediaStore.Images.Media.MIME_TYPE, format.mime)
             put(MediaStore.Images.Media.RELATIVE_PATH, "${Environment.DIRECTORY_PICTURES}/Arulume")
             put(MediaStore.Images.Media.IS_PENDING, 1)
         }
         val collection = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
         val uri = resolver.insert(collection, values) ?: return null
         resolver.openOutputStream(uri)?.use { out ->
-            if (!bmp.compress(Bitmap.CompressFormat.JPEG, quality, out)) {
+            if (!bmp.compress(format.compress, quality, out)) {
                 throw IllegalStateException("compress gagal")
             }
         } ?: throw IllegalStateException("stream kosong")
@@ -248,14 +392,20 @@ object ImagePipeline {
     }
 
     @Suppress("DEPRECATION")
-    private fun saveLegacy(ctx: Context, bmp: Bitmap, name: String, quality: Int): Saved? {
+    private fun saveLegacy(
+        ctx: Context,
+        bmp: Bitmap,
+        name: String,
+        quality: Int,
+        format: OutFormat,
+    ): Saved? {
         val dir = File(
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
             "Arulume",
         ).apply { mkdirs() }
         val f = File(dir, name)
-        FileOutputStream(f).use { bmp.compress(Bitmap.CompressFormat.JPEG, quality, it) }
-        MediaScannerConnection.scanFile(ctx, arrayOf(f.absolutePath), arrayOf("image/jpeg"), null)
+        FileOutputStream(f).use { bmp.compress(format.compress, quality, it) }
+        MediaScannerConnection.scanFile(ctx, arrayOf(f.absolutePath), arrayOf(format.mime), null)
         return Saved(Uri.fromFile(f), bmp.width, bmp.height)
     }
 }

@@ -10,7 +10,9 @@ import {
   IconVideo,
 } from "@/components/icons";
 import { Enhancer, isNative, type HistoryEntry } from "@/plugins/enhancer";
+import { bacaOnboarding } from "@/lib/settings";
 import { useJobStore } from "@/lib/job-store";
+import { useBatchStore } from "@/lib/batch-store";
 import { Capacitor } from "@capacitor/core";
 
 /**
@@ -20,6 +22,7 @@ import { Capacitor } from "@capacitor/core";
 export default function Beranda() {
   const router = useRouter();
   const setPhoto = useJobStore((s) => s.setPhoto);
+  const siapkanBatch = useBatchStore((s) => s.siapkan);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [terbaru, setTerbaru] = useState<HistoryEntry[]>([]);
@@ -33,6 +36,13 @@ export default function Beranda() {
       try {
         const { items } = await Enhancer.getPendingPick();
         if (batal || items.length === 0) return;
+        // Proses bisa mati saat pemilih di depan (MIUI). Kalau yang diselamatkan
+        // lebih dari satu foto, lanjutkan ke antrian batch, bukan editor tunggal.
+        if (items.length > 1) {
+          siapkanBatch(items);
+          router.push("/batch");
+          return;
+        }
         setPhoto(items[0]);
         router.push("/editor");
       } catch {
@@ -42,7 +52,12 @@ export default function Beranda() {
     return () => {
       batal = true;
     };
-  }, [router, setPhoto]);
+  }, [router, setPhoto, siapkanBatch]);
+
+  // Onboarding sekali jalan (TASKS 1.3): tampilkan sebelum apa pun yang lain.
+  useEffect(() => {
+    if (!bacaOnboarding()) router.replace("/mulai");
+  }, [router]);
 
   // Tiga hasil terakhir untuk bagian "Terbaru" (PRD FR-08).
   useEffect(() => {
@@ -92,6 +107,37 @@ export default function Beranda() {
     }
   }
 
+  /** Batch (PRD FR-11): pilih beberapa foto, lalu atur di layar Beberapa foto. */
+  async function pilihBanyak() {
+    setNotice(null);
+    if (!isNative()) {
+      setNotice("Pemilih foto baru aktif di aplikasi Android.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const { items, skipped } = await Enhancer.pickMedia({ type: "image", multiple: true });
+      if (items.length === 0) return;
+      siapkanBatch(items);
+      if (skipped && skipped > 0) {
+        setNotice(`${skipped} foto dilewati karena tidak bisa dibaca.`);
+      }
+      router.push("/batch");
+    } catch (e) {
+      const err = e as { code?: string; message?: string };
+      const code = err.code ?? "";
+      if (code === "E_PICK_CANCELLED") {
+        setNotice(null);
+      } else if (code === "UNIMPLEMENTED" || /unimplemented/i.test(err.message ?? "")) {
+        setNotice("Pemilih foto belum aktif di build ini.");
+      } else {
+        setNotice(`Gagal memilih foto (${code || "E_UNKNOWN"}).`);
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col px-5">
       {/* Bar atas: nama + pengaturan */}
@@ -129,6 +175,15 @@ export default function Beranda() {
         >
           <IconPhotoPlus size={22} />
           <span className="text-heading">Pilih Foto</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={pilihBanyak}
+          disabled={busy}
+          className="text-caption text-accent-text underline-offset-4 transition-opacity active:opacity-70 disabled:opacity-60"
+        >
+          Pilih beberapa foto sekaligus
         </button>
 
         <button
