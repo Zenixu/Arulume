@@ -64,10 +64,14 @@ class EnhancerPlugin : Plugin() {
         val l: (String, JSObject) -> Unit = { event, data -> notifyListeners(event, data) }
         pendengarJob = l
         JobRunner.tambahPendengar(l)
+        VideoRunner.tambahPendengar(l)
     }
 
     override fun handleOnDestroy() {
-        pendengarJob?.let { JobRunner.hapusPendengar(it) }
+        pendengarJob?.let {
+            JobRunner.hapusPendengar(it)
+            VideoRunner.hapusPendengar(it)
+        }
         pendengarJob = null
         if (instance === this) instance = null
         super.handleOnDestroy()
@@ -90,6 +94,51 @@ class EnhancerPlugin : Plugin() {
     }
 
     /** Menghapus cache pratinjau (`cacheDir/enhancer/` dan `cacheDir/hasil/`). Docs/ARCHITECTURE.md bagian 8. */
+    /** Versi aplikasi yang benar-benar terpasang (dibaca dari paket). */
+    @PluginMethod
+    fun versiApp(call: PluginCall) {
+        try {
+            val info = context.packageManager.getPackageInfo(context.packageName, 0)
+            @Suppress("DEPRECATION")
+            val kode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                info.longVersionCode.toInt()
+            } else {
+                info.versionCode
+            }
+            call.resolve(
+                JSObject()
+                    .put("nama", info.versionName ?: "0")
+                    .put("kode", kode),
+            )
+        } catch (t: Throwable) {
+            Log.e(TAG, "Versi tidak terbaca", t)
+            call.reject("Versi tidak terbaca", "E_UNKNOWN")
+        }
+    }
+
+    /**
+     * Membuka halaman rilis di browser (Docs/AGENTS.md aturan #1: aplikasi
+     * tidak punya izin INTERNET, jadi unduhan & pemasangan diserahkan ke
+     * browser/sistem).
+     */
+    @PluginMethod
+    fun bukaHalamanRilis(call: PluginCall) {
+        val url = call.getString("url") ?: TAUTAN_RILIS
+        if (!url.startsWith("https://github.com/Zenixu/Arulume/")) {
+            call.reject("Tautan tidak dikenal", "E_ARGS")
+            return
+        }
+        try {
+            val i = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(i)
+            call.resolve(JSObject().put("ok", true))
+        } catch (t: Throwable) {
+            Log.w(TAG, "Tidak ada browser: ${t.message}")
+            call.reject("Tidak ada aplikasi browser", "E_UNKNOWN")
+        }
+    }
+
     @PluginMethod
     fun clearCache(call: PluginCall) {
         val dirs = listOf(
@@ -192,6 +241,248 @@ class EnhancerPlugin : Plugin() {
         }
     }
 
+    // ------------------------------------------------------- Fase 2: video
+
+    /**
+     * Alat ukur Fase 2: membaca metadata klip lalu mengukur biaya per frame
+     * (decode, skala klasik, penajam, dan AI). Belum memproses video apa pun —
+     * hasilnya dipakai untuk menentukan batas durasi/resolusi.
+     */
+    @PluginMethod
+    fun videoProbe(call: PluginCall) {
+        val uriStr = call.getString("uri")
+        if (uriStr.isNullOrBlank()) {
+            call.reject("uri wajib diisi", "E_BAD_ARG")
+            return
+        }
+        val maksFrame = (call.getInt("frames") ?: 30).coerceIn(1, 300)
+        val target = (call.getInt("target") ?: 1280).coerceIn(160, 2160)
+        val aiSisi = (call.getInt("aiSize") ?: 320).coerceIn(96, 720)
+        val modelId = call.getString("modelId") ?: defaultModelId()
+
+        if (modelId == null) {
+            call.reject("Belum ada model di assets/models/", "E_MODEL_MISSING")
+            return
+        }
+
+        worker.execute {
+            try {
+                val ctx = context
+                val dir = File(ctx.cacheDir, "models").apply { mkdirs() }
+                val param = File(dir, "$modelId.param")
+                val bin = File(dir, "$modelId.bin")
+                copyAsset(ctx, "models/$modelId.param", param)
+                copyAsset(ctx, "models/$modelId.bin", bin)
+
+                val ret = VideoProbe.jalankan(
+                    ctx, Uri.parse(uriStr), maksFrame, target, aiSisi,
+                    param.absolutePath, bin.absolutePath,
+                )
+                Log.i(TAG, "Uji video: ${ret.toString()}")
+                call.resolve(ret)
+            } catch (t: Throwable) {
+                Log.e(TAG, "Uji video gagal", t)
+                call.reject("Uji video gagal: ${t.message}", "E_VIDEO_PROBE")
+            }
+        }
+    }
+
+    /**
+     * Memulai job video (Fase 2). Seperti foto, kerja berat pindah ke layanan
+     * foreground supaya tetap jalan saat aplikasi ditinggal; plugin langsung
+     * mengembalikan `jobId` dan hasilnya datang lewat event `progress` /
+     * `videoDone` / `videoFailed`.
+     */
+    @PluginMethod
+    fun prosesVideo(call: PluginCall) {
+        val uriStr = call.getString("uri")
+        if (uriStr.isNullOrBlank()) {
+            call.reject("uri wajib diisi", "E_BAD_ARG")
+            return
+        }
+        val target = (call.getInt("target") ?: 1280).coerceIn(240, 2160)
+        val bitrate = call.getInt("bitrate") ?: 0
+        val tajam = call.getBoolean("tajam") ?: true
+
+        if (VideoRunner.sedangJalan() != null) {
+            call.reject("Masih ada video yang sedang diproses", "E_BUSY")
+            return
+        }
+        val jobId = VideoRunner.jobIdBaru()
+        val params = VideoRunner.Params(
+            jobId = jobId,
+            uri = uriStr,
+            targetSisi = target,
+            bitrate = bitrate,
+            tajam = tajam,
+        )
+        call.resolve(JSObject().put("jobId", jobId).put("kind", "video"))
+        try {
+            EnhancerService.mulaiVideo(context, params)
+        } catch (t: Throwable) {
+            Log.e(TAG, "Layanan video gagal dimulai", t)
+            notifyListeners(
+                "videoFailed",
+                JSObject()
+                    .put("jobId", jobId)
+                    .put("kind", "video")
+                    .put("code", "E_UNKNOWN")
+                    .put("message", "Tidak bisa memulai proses video di latar"),
+            )
+        }
+    }
+
+    /**
+     * Keadaan job video: yang sedang jalan, atau yang terhenti tapi masih bisa
+     * dilanjutkan (`bisaLanjut: true` + persen terakhir).
+     */
+    @PluginMethod
+    fun getVideoStatus(call: PluginCall) {
+        val s = VideoRunner.statusTerkini(context)
+        if (s == null) {
+            call.resolve(JSObject().put("aktif", false).put("bisaLanjut", false))
+            return
+        }
+        call.resolve(
+            JSObject()
+                .put("jobId", s.jobId)
+                .put("stage", s.stage)
+                .put("percent", s.percent)
+                .put("aktif", s.aktif)
+                .put("frame", s.frame)
+                .put("totalFrame", s.totalFrame)
+                .put("bisaLanjut", s.bisaLanjut)
+                .put("path", s.path),
+        )
+    }
+
+    /** Melanjutkan job video yang terhenti dari frame terakhir yang tercatat. */
+    @PluginMethod
+    fun lanjutkanVideo(call: PluginCall) {
+        val s = VideoState.baca(context)
+        if (s == null || s.selesai) {
+            call.reject("Tidak ada proses video yang bisa dilanjutkan", "E_TIDAK_ADA")
+            return
+        }
+        if (VideoRunner.sedangJalan() != null) {
+            call.reject("Masih ada video yang sedang diproses", "E_BUSY")
+            return
+        }
+        try {
+            EnhancerService.lanjutkanVideo(context)
+            call.resolve(
+                JSObject()
+                    .put("jobId", s.jobId)
+                    .put("kind", "video")
+                    .put("percent", s.persen)
+                    .put("frame", s.frameTerakhir)
+                    .put("totalFrame", s.totalFrame),
+            )
+        } catch (t: Throwable) {
+            Log.e(TAG, "Layanan video gagal dilanjutkan", t)
+            call.reject("Tidak bisa melanjutkan di latar", "E_UNKNOWN")
+        }
+    }
+
+    /** Menjeda job video: potongan & catatan tetap disimpan untuk dilanjutkan. */
+    @PluginMethod
+    fun hentikanVideo(call: PluginCall) {
+        val ada = VideoRunner.hentikan()
+        call.resolve(JSObject().put("ok", ada))
+    }
+
+    /** Diagnosa sementara: simpan satu frame hasil dekode + uji encoder warna. */
+    @PluginMethod
+    fun videoDebug(call: PluginCall) {
+        val uriStr = call.getString("uri") ?: return call.reject("uri wajib", "E_BAD_ARG")
+        val index = (call.getInt("index") ?: 30).coerceIn(0, 3000)
+        worker.execute {
+            try {
+                val ctx = context
+                val dir = File(ctx.cacheDir, "debug-video").apply { mkdirs() }
+
+                // 1. Frame hasil dekode
+                val stream = VideoProbe.FrameStream(ctx, Uri.parse(uriStr))
+                var bmp: android.graphics.Bitmap? = null
+                for (i in 0..index) {
+                    bmp?.recycle()
+                    bmp = stream.berikutnya() ?: break
+                }
+                stream.close()
+                val png = File(dir, "frame-$index.png")
+                png.outputStream().use { bmp?.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+                val w = bmp?.width ?: 0
+                val h = bmp?.height ?: 0
+                bmp?.recycle()
+
+                // 2. Encoder diuji dengan pola warna yang sudah diketahui
+                val mp4 = File(dir, "warna.mp4")
+                if (mp4.exists()) mp4.delete()
+                val mux = android.media.MediaMuxer(mp4.absolutePath, android.media.MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
+                val enc = VideoEncoder(1280, 720, 30, 4_000_000, mux)
+                val px = IntArray(1280 * 720)
+                for (f in 0 until 30) {
+                    for (y in 0 until 720) {
+                        val baris = y * 1280
+                        for (x in 0 until 1280) {
+                            px[baris + x] = when {
+                                x < 427 -> 0xFFFF0000.toInt()
+                                x < 854 -> 0xFF00FF00.toInt()
+                                else -> 0xFF0000FF.toInt()
+                            }
+                        }
+                    }
+                    enc.tulis(px, f * 33_333L)
+                }
+                enc.tutup()
+                runCatching { mux.stop() }
+                runCatching { mux.release() }
+
+                // 3. Uji skala + getPixels (sumber masalah frame hitam)
+                val stream2 = VideoProbe.FrameStream(ctx, Uri.parse(uriStr))
+                var b2: android.graphics.Bitmap? = null
+                for (i in 0..index) {
+                    b2?.recycle()
+                    b2 = stream2.berikutnya() ?: break
+                }
+                stream2.close()
+                var infoSkala = "tidak ada frame"
+                if (b2 != null) {
+                    val sk = android.graphics.Bitmap.createScaledBitmap(b2, 1280, 720, true)
+                    File(dir, "skala-langsung.png").outputStream().use {
+                        sk.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it)
+                    }
+                    val arr = IntArray(1280 * 720)
+                    sk.getPixels(arr, 0, 1280, 0, 0, 1280, 720)
+                    val dariArr = android.graphics.Bitmap.createBitmap(arr, 1280, 720, android.graphics.Bitmap.Config.ARGB_8888)
+                    File(dir, "skala-array.png").outputStream().use {
+                        dariArr.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it)
+                    }
+                    infoSkala = "src=${b2.width}x${b2.height} config=${sk.config} rowBytes=${sk.rowBytes} " +
+                        "px0=0x${Integer.toHexString(arr[0])} px100=0x${Integer.toHexString(arr[100])} " +
+                        "px_tengah=0x${Integer.toHexString(arr[1280 * 360 + 640])}"
+                    Log.i(TAG, "Uji skala: $infoSkala")
+                    dariArr.recycle()
+                    sk.recycle()
+                    b2.recycle()
+                }
+
+                call.resolve(
+                    JSObject()
+                        .put("skala", infoSkala)
+                        .put("frame", png.absolutePath)
+                        .put("frameW", w)
+                        .put("frameH", h)
+                        .put("warna", mp4.absolutePath)
+                        .put("warnaBytes", mp4.length()),
+                )
+            } catch (t: Throwable) {
+                Log.e(TAG, "Debug video gagal", t)
+                call.reject("Debug gagal: ${t.message}", "E_VIDEO_DEBUG")
+            }
+        }
+    }
+
     // ------------------------------------------------------- Fase 1: foto
 
     /**
@@ -201,10 +492,11 @@ class EnhancerPlugin : Plugin() {
     @PluginMethod
     fun pickMedia(call: PluginCall) {
         val mediaType = call.getString("type") ?: "image"
-        if (mediaType != "image") {
-            call.reject("Video menyusul di Fase 2", "E_UNSUPPORTED_FORMAT")
+        if (mediaType != "image" && mediaType != "video") {
+            call.reject("Jenis media tidak dikenal", "E_UNSUPPORTED_FORMAT")
             return
         }
+        val pola = if (mediaType == "video") "video/*" else "image/*"
         if (pendingPick) {
             call.reject("Pemilihan lain masih berjalan", "E_BUSY")
             return
@@ -217,7 +509,7 @@ class EnhancerPlugin : Plugin() {
 
         val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Intent(MediaStore.ACTION_PICK_IMAGES).apply {
-                this.type = "image/*"
+                this.type = pola
                 if (multiple) {
                     putExtra(MediaStore.EXTRA_PICK_IMAGES_MAX, batas)
                 }
@@ -225,7 +517,7 @@ class EnhancerPlugin : Plugin() {
         } else {
             Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                 addCategory(Intent.CATEGORY_OPENABLE)
-                this.type = "image/*"
+                this.type = pola
                 if (multiple) putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
             }
         }
@@ -240,8 +532,8 @@ class EnhancerPlugin : Plugin() {
         } catch (t: Throwable) {
             pendingPick = false
             pendingPickCall = null
-            Log.e(TAG, "Pemilih foto gagal dibuka", t)
-            call.reject("Pemilih foto tidak tersedia di perangkat ini", "E_UNKNOWN")
+            Log.e(TAG, "Pemilih media gagal dibuka", t)
+            call.reject("Pemilih media tidak tersedia di perangkat ini", "E_UNKNOWN")
         }
     }
 
@@ -306,6 +598,35 @@ class EnhancerPlugin : Plugin() {
                 for (uri in uris.take(MAX_BATCH)) {
                     try {
                         val (name, mime, size) = ImagePipeline.queryMeta(ctx, uri)
+                        if (mime.startsWith("video/")) {
+                            val meta = VideoProbe.meta(ctx, uri)
+                            if (meta == null || meta.lebar <= 0 || meta.tinggi <= 0) {
+                                gagal++
+                                continue
+                            }
+                            val bingkai = VideoProbe.potongan(ctx, uri, 720)
+                            val jalur = if (bingkai != null) {
+                                val jal = ImagePipeline.writePreview(ctx, bingkai, 720)
+                                bingkai.recycle()
+                                jal
+                            } else {
+                                ""
+                            }
+                            items.put(
+                                JSObject()
+                                    .put("uri", uri.toString())
+                                    .put("name", name)
+                                    .put("mime", mime)
+                                    .put("sizeBytes", size)
+                                    .put("kind", "video")
+                                    .put("width", meta.lebar)
+                                    .put("height", meta.tinggi)
+                                    .put("durationMs", meta.durasiMs)
+                                    .put("fps", meta.fps)
+                                    .put("previewPath", jalur),
+                            )
+                            continue
+                        }
                         val (w, h) = ImagePipeline.bounds(ctx, uri)
                         if (w <= 0 || h <= 0) {
                             gagal++
@@ -325,6 +646,7 @@ class EnhancerPlugin : Plugin() {
                                 .put("name", name)
                                 .put("mime", mime)
                                 .put("sizeBytes", size)
+                                .put("kind", "image")
                                 .put("width", w)
                                 .put("height", h)
                                 .put("previewPath", previewPath),
@@ -482,6 +804,7 @@ class EnhancerPlugin : Plugin() {
     @PluginMethod
     fun cancelJob(call: PluginCall) {
         JobRunner.batalkan(call.getString("jobId"))
+        VideoRunner.batalkan(call.getString("jobId"))
         call.resolve()
     }
 
@@ -611,6 +934,63 @@ class EnhancerPlugin : Plugin() {
             } finally {
                 bmp?.recycle()
             }
+        }
+    }
+
+    /**
+     * Menyimpan hasil video ke galeri `Movies/Arulume` (PRD FR-26). Sama seperti
+     * foto, hanya berkas di folder hasil sendiri yang boleh disimpan.
+     */
+    @PluginMethod
+    fun saveVideoToGallery(call: PluginCall) {
+        val path = call.getString("path")
+        if (path.isNullOrBlank()) {
+            call.reject("Berkas hasil tidak diketahui", "E_SAVE_FAILED")
+            return
+        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q &&
+            getPermissionState("storage") != PermissionState.GRANTED
+        ) {
+            requestPermissionForAlias("storage", call, "onStoragePermissionSaveVideo")
+            return
+        }
+        doSaveVideo(call, path)
+    }
+
+    @PermissionCallback
+    private fun onStoragePermissionSaveVideo(call: PluginCall) {
+        val path = call.getString("path")
+        if (getPermissionState("storage") == PermissionState.GRANTED && path != null) {
+            doSaveVideo(call, path)
+        } else {
+            call.reject("Izin menyimpan ke galeri ditolak", "E_SAVE_FAILED")
+        }
+    }
+
+    private fun doSaveVideo(call: PluginCall, path: String) {
+        val dir = File(context.cacheDir, "hasil-video").canonicalPath
+        val file = try {
+            File(path).canonicalFile
+        } catch (t: Throwable) {
+            call.reject("Berkas hasil tidak valid", "E_SAVE_FAILED")
+            return
+        }
+        if (!file.path.startsWith(dir) || !file.exists()) {
+            call.reject("Hasil sudah tidak ada, coba proses ulang", "E_SAVE_FAILED")
+            return
+        }
+        worker.execute {
+            val hasil = VideoSaver.simpan(context, file)
+            if (hasil == null) {
+                call.reject("Gagal menyimpan video ke galeri", "E_SAVE_FAILED")
+                return@execute
+            }
+            Riwayat.tandaiTersimpan(context, file.absolutePath, hasil.uri.toString(), hasil.nama)
+            call.resolve(
+                JSObject()
+                    .put("uri", hasil.uri.toString())
+                    .put("name", hasil.nama),
+            )
         }
     }
 
@@ -888,6 +1268,9 @@ class EnhancerPlugin : Plugin() {
     companion object {
         private const val TAG = "Arulume/Enhancer"
         private const val PREFS_PICK = "arulume_pick"
+
+        /** Halaman rilis resmi; satu-satunya tujuan tombol "Periksa update". */
+        private const val TAUTAN_RILIS = "https://github.com/Zenixu/Arulume/releases/latest"
         private const val KEY_PICK = "uri"
 
         /** Request code pemilih foto; dipakai `MainActivity`. */

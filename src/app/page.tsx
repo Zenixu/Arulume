@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Mascot, MASCOT_ROLE } from "@/components/mascot";
 import {
+  IconChevronRight,
   IconPhotoPlus,
   IconSettings,
   IconVideo,
@@ -26,6 +27,11 @@ export default function Beranda() {
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [terbaru, setTerbaru] = useState<HistoryEntry[]>([]);
+  /** Job video yang sedang jalan atau terhenti — tampil sebagai kartu. */
+  const [video, setVideo] = useState<{
+    aktif: boolean;
+    percent: number;
+  } | null>(null);
 
   // Kalau proses mati saat pemilih foto di depan, hasilnya diselamatkan plugin
   // dan diambil di sini supaya alurnya tidak putus.
@@ -53,6 +59,37 @@ export default function Beranda() {
       batal = true;
     };
   }, [router, setPhoto, siapkanBatch]);
+
+  // Video yang sedang jalan atau terhenti: beri jalan pintas ke layarnya,
+  // supaya proses yang berhenti tidak "hilang" tanpa jejak.
+  useEffect(() => {
+    if (!isNative()) return;
+    let batal = false;
+    async function cek() {
+      try {
+        const s = await Enhancer.getVideoStatus();
+        if (batal) return;
+        if (s?.aktif || s?.bisaLanjut) {
+          setVideo({ aktif: !!s.aktif, percent: s.percent ?? 0 });
+        } else {
+          setVideo(null);
+        }
+      } catch {
+        /* diamkan */
+      }
+    }
+    cek();
+    const t = setInterval(cek, 4000);
+    const onVis = () => {
+      if (document.visibilityState === "visible") cek();
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      batal = true;
+      clearInterval(t);
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, []);
 
   // Onboarding sekali jalan (TASKS 1.3): tampilkan sebelum apa pun yang lain.
   useEffect(() => {
@@ -186,19 +223,37 @@ export default function Beranda() {
           Pilih beberapa foto sekaligus
         </button>
 
-        <button
-          type="button"
-          disabled
-          className="flex h-[52px] w-full items-center justify-between rounded-md border border-border bg-surface px-4 opacity-70"
+        {video ? (
+          <Link
+            href="/video"
+            className="flex w-full items-center justify-between rounded-md border border-accent bg-surface px-4 py-3 transition-colors active:bg-surface-2"
+          >
+            <span className="flex items-center gap-2.5">
+              <IconVideo size={20} className="text-accent-text" />
+              <span className="flex flex-col text-left">
+                <span className="text-body text-text">
+                  {video.aktif ? "Video sedang diproses" : "Video terhenti"}
+                </span>
+                <span className="text-caption text-text-2">
+                  {video.percent}% selesai ·{" "}
+                  {video.aktif ? "ketuk untuk melihat" : "ketuk untuk melanjutkan"}
+                </span>
+              </span>
+            </span>
+            <IconChevronRight size={18} className="text-text-2" />
+          </Link>
+        ) : null}
+
+        <Link
+          href="/video"
+          className="flex h-[52px] w-full items-center justify-between rounded-md border border-border bg-surface px-4 transition-colors active:bg-surface-2"
         >
           <span className="flex items-center gap-2.5">
             <IconVideo size={20} className="text-text-2" />
             <span className="text-body text-text">Pilih Video</span>
           </span>
-          <span className="rounded-full bg-surface-2 px-2 py-0.5 text-caption text-text-2">
-            Segera
-          </span>
-        </button>
+          <IconChevronRight size={18} className="text-text-2" />
+        </Link>
 
         {notice ? (
           <p

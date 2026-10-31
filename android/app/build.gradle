@@ -1,6 +1,16 @@
 apply plugin: 'com.android.application'
 apply plugin: 'org.jetbrains.kotlin.android'
 
+// Kunci rilis TIDAK boleh masuk repo (Docs/AGENTS.md aturan #9). Berkasnya
+// dibaca dari luar proyek: ~/.arulume/release.properties. Kalau tidak ada,
+// build rilis memakai kunci debug supaya `assembleRelease` tetap bisa jalan.
+def propsRilis = new Properties()
+def berkasRilis = new File(System.getProperty("user.home"), ".arulume/release.properties")
+if (berkasRilis.exists()) {
+    berkasRilis.withInputStream { propsRilis.load(it) }
+}
+def adaKunciRilis = berkasRilis.exists() && propsRilis.getProperty("storeFile") != null
+
 android {
     namespace = "id.aruthtale.arulume"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -9,8 +19,8 @@ android {
         applicationId "id.aruthtale.arulume"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "0.0.1"
+        versionCode 2
+        versionName "0.1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -37,10 +47,22 @@ android {
             version "3.22.1"
         }
     }
+    signingConfigs {
+        rilis {
+            if (adaKunciRilis) {
+                storeFile file(propsRilis.getProperty("storeFile"))
+                storePassword propsRilis.getProperty("storePassword")
+                keyAlias propsRilis.getProperty("keyAlias")
+                keyPassword propsRilis.getProperty("keyPassword")
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            // Bertanda tangan kunci rilis bila tersedia; kalau tidak, debug.
+            signingConfig adaKunciRilis ? signingConfigs.rilis : signingConfigs.debug
         }
     }
     compileOptions {

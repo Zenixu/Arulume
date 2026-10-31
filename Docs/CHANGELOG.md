@@ -6,6 +6,36 @@ Kategori: **Added** (baru) · **Changed** (diubah) · **Fixed** (diperbaiki) · 
 
 ---
 
+## [0.1.0] — 2026-10-31
+
+### Added
+- **Video (Fase 2):** layar `/video` — pilih klip, lihat metadata (durasi, resolusi, fps), pilih target
+  HD (1280) atau Full HD (1920), lalu ekstrak di latar. Keluaran H.264 + audio asli, hasil di
+  `cacheDir/hasil-video/`, disimpan manual ke `Movies/Arulume` sebagai `Arulume_{yyyyMMdd-HHmmss}.mp4`.
+- Progres video per frame (`progress` dengan `kind:"video"`, `frame`, `totalFrame`) + notifikasi progres.
+- **Proses video tahan terputus:** hasil ditulis per segmen (2–3 dtk) dengan checkpoint
+  `filesDir/video-job.json` (`VideoState`), segmen disambung ulang tanpa re-encode (`VideoGabung`),
+  dan decode dilanjutkan dari sync frame terakhir (`FrameStream.lompatKe`). Kalau aplikasi ditutup,
+  proses dibunuh sistem, atau HP kehabisan daya, pekerjaan **tidak diulang dari awal**.
+- Tombol **"Jeda dulu"** (menyimpan potongan, bukan membuang) dan **"Lanjutkan"** di layar `/video`;
+  layanan `START_STICKY` melanjutkan sendiri job yang belum selesai saat proses dihidupkan kembali.
+- Kartu pintasan di Beranda: "Video sedang diproses" / "Video terhenti · X% · ketuk untuk melanjutkan".
+- Pengaturan → **Pembaruan**: tombol "Periksa update" membuka halaman rilis GitHub di browser, dan
+  nomor versi dibaca dari paket yang terpasang (bukan konstanta di kode).
+
+### Changed
+- `versionCode` 2, `versionName` 0.1.0; build rilis ditandatangani kunci rilis di luar repo
+  (`~/.arulume/release.properties`), dengan fallback kunci debug bila kunci tidak tersedia.
+
+### Fixed
+- Berkas video hasil yang rusak ketika proses berhenti di tengah (MP4 hanya menulis `moov` saat ditutup).
+- Warna hasil video yang sebelumnya gelap/oversaturasi (pemilihan format warna runtime, kernel penajam
+  berbobot total 1, UV digabung hanya bila kedua plane 2×2).
+
+### Security
+- Aplikasi tetap **tanpa izin `INTERNET`** dan tanpa pustaka jaringan. Tombol pembaruan hanya membuka
+  URL rilis resmi lewat `ACTION_VIEW`; unduhan dan pemasangan diserahkan ke browser/sistem.
+
 ## [Unreleased]
 
 ### Added

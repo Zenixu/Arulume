@@ -54,6 +54,38 @@ object Riwayat {
         simpan(ctx, (listOf(entri) + lama).take(MAX_ENTRIES))
     }
 
+    /**
+     * Entri riwayat untuk hasil video (Fase 2). Bentuknya sama dengan entri foto
+     * plus `kind = "video"`, supaya layar Riwayat bisa membedakan keduanya tanpa
+     * berkas riwayat terpisah.
+     */
+    @Synchronized
+    fun tambahVideo(ctx: Context, data: com.getcapacitor.JSObject) {
+        try {
+            val entri = JSONObject()
+                .put("id", data.optString("jobId"))
+                .put("kind", "video")
+                .put("createdAt", System.currentTimeMillis())
+                .put("model", "video")
+                .put("scale", 1)
+                .put("srcWidth", data.optInt("srcWidth"))
+                .put("srcHeight", data.optInt("srcHeight"))
+                .put("outWidth", data.optInt("width"))
+                .put("outHeight", data.optInt("height"))
+                .put("durationMs", data.optLong("ms"))
+                .put("videoDurationMs", data.optLong("durationMs"))
+                .put("frames", data.optInt("frames"))
+                .put("resultPath", data.optString("path"))
+                .put("beforePreviewPath", data.optString("previewPath"))
+                .put("afterPreviewPath", data.optString("previewPath"))
+                .put("savedUri", "")
+                .put("savedName", "")
+            add(ctx, entri)
+        } catch (t: Throwable) {
+            Log.w("Arulume/Riwayat", "Gagal menambah riwayat video: ${t.message}")
+        }
+    }
+
     /** Tandai entri dengan `resultPath` ini sudah disimpan ke galeri. */
     @Synchronized
     fun tandaiTersimpan(ctx: Context, resultPath: String, uri: String, nama: String) {

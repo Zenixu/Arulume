@@ -42,3 +42,9 @@ next-env.d.ts
 
 # Aset web hasil `npx cap sync` (dibuat ulang dari `out/`)
 android/app/src/main/assets/public/
+
+# Kunci tanda tangan rilis & sandinya (Docs/AGENTS.md aturan #9)
+*.jks
+*.keystore
+release.properties
+local.properties

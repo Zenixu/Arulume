@@ -74,6 +74,10 @@ export interface ProgressEvent {
   tileIndex?: number;
   tileTotal?: number;
   etaSec?: number;
+  /** Terisi untuk job video (Fase 2). */
+  kind?: "image" | "video";
+  frame?: number;
+  totalFrame?: number;
 }
 
 export interface CompletedEvent {
@@ -152,8 +156,13 @@ export interface SelfTestResult {
 export interface HistoryEntry {
   id: string;
   createdAt: number;
+  /** `video` untuk hasil Fase 2; entri lama tidak punya kolom ini. */
+  kind?: "image" | "video";
   model: string;
   scale: number;
+  /** Hanya untuk video: durasi klip & jumlah frame. */
+  videoDurationMs?: number;
+  frames?: number;
   srcWidth: number;
   srcHeight: number;
   outWidth: number;
@@ -207,6 +216,66 @@ export interface BatchOptions {
   };
 }
 
+/** Pengaturan proses video (Fase 2). */
+export interface VideoOptions {
+  uri: string;
+  /** Sisi panjang hasil: 1280 (720p) atau 1920 (1080p). */
+  target?: number;
+  /** 0 = otomatis dari resolusi & fps. */
+  bitrate?: number;
+  /** Penajaman ringan setelah diskala. */
+  tajam?: boolean;
+}
+
+export interface VideoProgressEvent {
+  jobId: string;
+  kind: "video";
+  stage: string;
+  percent: number;
+  frame: number;
+  totalFrame: number;
+}
+
+export interface VideoDoneEvent {
+  jobId: string;
+  kind: "video";
+  /** Path hasil di cache; belum masuk galeri. */
+  path: string;
+  width: number;
+  height: number;
+  frames: number;
+  bytes: number;
+  /** Durasi klip hasil. */
+  durationMs: number;
+  /** Lama proses. */
+  ms: number;
+}
+
+export interface VideoFailedEvent {
+  jobId: string;
+  kind: "video";
+  code: ErrorCode | "E_VIDEO_ENCODE";
+  message: string;
+  /** Persen terakhir sebelum berhenti. */
+  percent?: number;
+  frame?: number;
+  totalFrame?: number;
+  /** True bila job bisa dilanjutkan dari frame terakhir (tidak diulang). */
+  bisaLanjut?: boolean;
+}
+
+export interface VideoStatus {
+  jobId?: string;
+  stage?: string;
+  percent?: number;
+  aktif: boolean;
+  frame?: number;
+  totalFrame?: number;
+  /** Ada job terhenti yang bisa dilanjutkan. */
+  bisaLanjut?: boolean;
+  path?: string;
+}
+
 export interface EnhancerPlugin {
   getCapabilities(): Promise<DeviceCapabilities>;
   runSelfTest(opts?: {
@@ -241,6 +310,28 @@ export interface EnhancerPlugin {
    * berarti proses masih hidup di layanan latar.
    */
   getJobStatus(): Promise<JobStatus>;
+  /** Memulai proses video; hasil datang lewat event `videoDone`. */
+  prosesVideo(opts: VideoOptions): Promise<{ jobId: string; kind: "video" }>;
+  getVideoStatus(): Promise<VideoStatus>;
+  /** Versi aplikasi yang terpasang. */
+  versiApp(): Promise<{ nama: string; kode: number }>;
+  /**
+   * Membuka halaman rilis di browser. Aplikasi tidak punya izin internet,
+   * jadi unduhan & pemasangan APK dikerjakan browser/sistem.
+   */
+  bukaHalamanRilis(opts?: { url?: string }): Promise<{ ok: boolean }>;
+  /** Melanjutkan job video yang terhenti dari frame terakhir. */
+  lanjutkanVideo(): Promise<{
+    jobId: string;
+    kind: "video";
+    percent: number;
+    frame: number;
+    totalFrame: number;
+  }>;
+  /** Menjeda job video; potongan tersimpan untuk dilanjutkan nanti. */
+  hentikanVideo(): Promise<{ ok: boolean }>;
+  /** Menyalin hasil video ke galeri `Movies/Arulume`. */
+  saveVideoToGallery(opts: { path: string }): Promise<{ uri: string; name: string }>;
   /** Meminta izin notifikasi (Android 13+). Notifikasi lokal, bukan FCM. */
   mintaIzinNotifikasi(): Promise<{ granted: boolean }>;
   listHistory(): Promise<{ items: HistoryEntry[] }>;
@@ -269,6 +360,14 @@ export interface EnhancerPlugin {
   addListener(
     ev: "itemFailed",
     fn: (e: ItemFailedEvent) => void,
+  ): Promise<PluginListenerHandle>;
+  addListener(
+    ev: "videoDone",
+    fn: (e: VideoDoneEvent) => void,
+  ): Promise<PluginListenerHandle>;
+  addListener(
+    ev: "videoFailed",
+    fn: (e: VideoFailedEvent) => void,
   ): Promise<PluginListenerHandle>;
 }
 

@@ -28,7 +28,22 @@ class EnhancerService : Service() {
         private const val TAG = "Arulume/Service"
 
         const val ACTION_MULAI = "id.aruthtale.arulume.action.MULAI"
+        const val ACTION_MULAI_VIDEO = "id.aruthtale.arulume.action.MULAI_VIDEO"
+        const val ACTION_LANJUT_VIDEO = "id.aruthtale.arulume.action.LANJUT_VIDEO"
         const val ACTION_BATAL = "id.aruthtale.arulume.action.BATAL"
+
+        /** Menjalankan job video di layanan foreground yang sama. */
+        fun mulaiVideo(ctx: Context, params: VideoRunner.Params) {
+            val i = params.keIntent(Intent(ctx, EnhancerService::class.java))
+                .setAction(ACTION_MULAI_VIDEO)
+            ContextCompat.startForegroundService(ctx, i)
+        }
+
+        /** Melanjutkan job video yang terhenti (dari catatan di disk). */
+        fun lanjutkanVideo(ctx: Context) {
+            val i = Intent(ctx, EnhancerService::class.java).setAction(ACTION_LANJUT_VIDEO)
+            ContextCompat.startForegroundService(ctx, i)
+        }
 
         /** Menjalankan job di layanan foreground. Aman dipanggil dari plugin. */
         fun mulai(ctx: Context, params: JobRunner.Params) {
@@ -43,6 +58,16 @@ class EnhancerService : Service() {
          * notifikasi hasil ikut terhapus).
          */
         fun selesai(ctx: Context, judul: String, teks: String) {
+            ProsesNotif.selesai(ctx, judul, teks)
+            try {
+                ctx.stopService(Intent(ctx, EnhancerService::class.java))
+            } catch (t: Throwable) {
+                Log.w(TAG, "Stop layanan gagal: ${t.message}")
+            }
+        }
+
+        /** Pekerjaan berhenti karena kesalahan: beri tahu, lalu tutup layanan. */
+        fun gagal(ctx: Context, judul: String, teks: String) {
             ProsesNotif.selesai(ctx, judul, teks)
             try {
                 ctx.stopService(Intent(ctx, EnhancerService::class.java))
@@ -74,7 +99,65 @@ class EnhancerService : Service() {
         val aksi = intent?.action
         if (aksi == ACTION_BATAL) {
             JobRunner.batalkan(null)
+            VideoRunner.batalkan(null)
             hentikan()
+            return START_NOT_STICKY
+        }
+
+        // Video (Fase 2): jalur terpisah karena parameter dan progres per frame
+        // berbeda, tetapi layanan, wake lock, dan notifikasinya sama.
+        if (aksi == ACTION_MULAI_VIDEO) {
+            naikkanKeForeground(ProsesNotif.bangunProgres(this, "Menyiapkan video", "Memulai…", 0))
+            ambilWakeLock()
+            val paramsVideo = VideoRunner.Params.dariIntent(intent)
+            if (paramsVideo == null) {
+                Log.w(TAG, "Intent video tanpa parameter")
+                hentikan()
+                return START_NOT_STICKY
+            }
+            VideoRunner.mulai(applicationContext, paramsVideo)
+            // STICKY: bila proses dibunuh sistem di tengah jalan, layanan
+            // dihidupkan lagi dan job dilanjutkan otomatis (lihat onStartCommand).
+            return START_STICKY
+        }
+
+        if (aksi == ACTION_LANJUT_VIDEO) {
+            val s = VideoState.baca(this)
+            if (s == null || s.selesai) {
+                hentikan()
+                return START_NOT_STICKY
+            }
+            naikkanKeForeground(
+                ProsesNotif.bangunProgres(
+                    this,
+                    "Melanjutkan video",
+                    "${s.persen}% · frame ${s.frameTerakhir} dari ${s.totalFrame}",
+                    s.persen,
+                ),
+            )
+            ambilWakeLock()
+            VideoRunner.lanjutkan(applicationContext)
+            return START_STICKY
+        }
+
+        // Intent kosong = layanan dihidupkan ulang sistem setelah proses mati.
+        // Kalau ada catatan job video yang belum selesai, lanjutkan otomatis.
+        if (aksi == null) {
+            val sisa = VideoState.baca(this)
+            if (sisa != null && !sisa.selesai) {
+                naikkanKeForeground(
+                    ProsesNotif.bangunProgres(
+                        this,
+                        "Melanjutkan video",
+                        "${sisa.persen}% · frame ${sisa.frameTerakhir} dari ${sisa.totalFrame}",
+                        sisa.persen,
+                    ),
+                )
+                ambilWakeLock()
+                VideoRunner.lanjutkan(applicationContext)
+                return START_STICKY
+            }
+            stopSelf()
             return START_NOT_STICKY
         }
 

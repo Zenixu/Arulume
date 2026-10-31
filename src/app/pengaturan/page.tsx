@@ -26,7 +26,11 @@ import {
   type Tema,
 } from "@/lib/settings";
 
-const VERSI = "0.0.1"; // samakan dengan versionName di android/app/build.gradle
+/** Cadangan bila versi tidak terbaca dari paket (mis. saat pratinjau web). */
+const VERSI_WEB = "0.0.1";
+
+/** Halaman rilis resmi — dibuka di browser, bukan diunduh di dalam app. */
+const TAUTAN_RILIS = "https://github.com/Zenixu/Arulume/releases/latest";
 
 function Segmen<T extends string | number>({
   nilai,
@@ -66,12 +70,52 @@ export default function Pengaturan() {
   const [format, setFormat] = useState<Format>("jpeg");
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [versi, setVersi] = useState(VERSI_WEB);
 
   useEffect(() => {
     setTema(bacaTema());
     setSkala(bacaSkalaBawaan());
     setFormat(bacaFormat());
   }, []);
+
+  // Versi dibaca dari paket yang terpasang, supaya angka di layar tidak
+  // pernah berbeda dengan APK yang benar-benar dipakai.
+  useEffect(() => {
+    if (!isNative()) return;
+    let batal = false;
+    (async () => {
+      try {
+        const v = await Enhancer.versiApp();
+        if (!batal && v?.nama) setVersi(v.nama);
+      } catch {
+        /* biarkan nilai cadangan */
+      }
+    })();
+    return () => {
+      batal = true;
+    };
+  }, []);
+
+  /** Buka halaman rilis di browser: unduh APK, lalu pasang seperti biasa. */
+  async function periksaUpdate() {
+    if (busy) return;
+    setBusy(true);
+    setNotice(null);
+    try {
+      if (!isNative()) {
+        setNotice("Pembaruan hanya bisa dibuka dari aplikasi Android.");
+        return;
+      }
+      await Enhancer.bukaHalamanRilis({ url: TAUTAN_RILIS });
+      setNotice(
+        "Halaman rilis dibuka di browser. Unduh APK terbaru, lalu pasang — data dan hasil tidak terhapus.",
+      );
+    } catch {
+      setNotice("Tidak ada browser untuk membuka halaman rilis.");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   function gantiTema(t: Tema) {
     setTema(t);
@@ -216,12 +260,32 @@ export default function Pengaturan() {
 
         <section className="flex flex-col gap-2">
           <h2 className="text-caption uppercase tracking-wide text-text-2">
+            Pembaruan
+          </h2>
+          <button
+            type="button"
+            onClick={periksaUpdate}
+            disabled={busy}
+            className="flex h-12 items-center justify-between rounded-md border border-border bg-surface px-4 text-body text-text disabled:opacity-60"
+          >
+            <span>{busy ? "Membuka…" : "Periksa update"}</span>
+            <IconChevronRight size={18} className="text-text-2" />
+          </button>
+          <p className="text-caption text-text-2">
+            Membuka halaman rilis Arulume di browser. Aplikasi ini tidak punya
+            akses internet, jadi unduhan dan pemasangan dikerjakan sistem —
+            tidak ada data yang dikirim keluar.
+          </p>
+        </section>
+
+        <section className="flex flex-col gap-2">
+          <h2 className="text-caption uppercase tracking-wide text-text-2">
             Tentang &amp; lisensi
           </h2>
           <div className="flex flex-col gap-2 rounded-md border border-border bg-surface px-4 py-3 text-caption text-text-2">
             <div className="flex justify-between">
               <span className="text-text">Arulume</span>
-              <span>versi {VERSI}</span>
+              <span>versi {versi}</span>
             </div>
             <div className="flex justify-between">
               <span>Mesin</span>
