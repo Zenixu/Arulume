@@ -139,7 +139,8 @@ export default function HalamanUji() {
           <div className="mt-2 rounded-md border border-border bg-surface p-4">
             <p className="text-body text-text">Uji mesin</p>
             <p className="mt-1 text-caption text-text-2">
-              Memperbesar citra uji 256×256 di dalam aplikasi, tanpa internet.
+              Memperbesar citra uji 256×256, 512×512, dan 1024×1024 di dalam
+              aplikasi, tanpa internet.
             </p>
             <div className="mt-3 flex gap-2">
               <button
@@ -165,7 +166,14 @@ export default function HalamanUji() {
             ) : null}
 
             {tests.length ? (
-              <table className="mt-3 w-full border-collapse">
+              <>
+                <p className="mt-3 text-caption text-text-2">
+                  {tests[0].vulkan ? "Mesin GPU (Vulkan)" : "Mesin CPU"}
+                  {Math.max(...tests.map((t) => t.tile)) > 0
+                    ? ` · 1024² dipotong ${Math.max(...tests.map((t) => t.tile))} px`
+                    : " · satu lintasan"}
+                </p>
+                <table className="mt-2 w-full border-collapse">
                 <thead>
                   <tr className="text-left">
                     <th className="text-caption font-normal text-text-2">Masuk</th>
@@ -188,7 +196,8 @@ export default function HalamanUji() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+                </table>
+              </>
             ) : null}
           </div>
         ) : null}

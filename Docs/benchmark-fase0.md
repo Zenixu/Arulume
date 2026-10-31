@@ -75,29 +75,33 @@ di halaman *Info perangkat* menjalankan tiga ukuran berturut-turut.
 - Perangkat: Redmi Note 8 (`ginkgo`), Snapdragon 665, Adreno 610, RAM 3.633 MB, Android 11.
 - Model: `realesr-animevideov3-x2` (ncnn, 1,2 MB), keluaran selalu 2x.
 - Thread CPU: 4. Ukuran 1024 memakai potongan `tile = 256`, `pad = 16`.
-- Angka = satu kali jalan (belum dirata-rata 3 kali).
+- Angka = **rentang dari dua kali jalan** (bukan rata-rata 3 kali seperti protokol §4).
+  Selisih antar jalan cukup besar (CPU 1024²: 32,7 vs 38,6 dtk) — HP ini juga dipakai
+  untuk hal lain, jadi suhu dan beban latar memengaruhi.
 
-| Mesin | Masuk | Keluaran | Muat model | Inferensi | Catatan |
+| Mesin | Masuk | Keluaran | Muat model | Inferensi (2× jalan) | Catatan |
 |---|---|---|---|---|---|
-| CPU | 256² | 512² | 148 ms | **1.503 ms** | satu lintasan |
-| CPU | 512² | 1024² | 131 ms | **7.318 ms** | satu lintasan |
-| CPU | 1024² | 2048² | 266 ms | **38.593 ms** | 16 tile |
-| GPU (Vulkan) | 256² | 512² | 4.803 ms | **2.402 ms** | muat termasuk inisialisasi Vulkan |
-| GPU (Vulkan) | 512² | 1024² | 4.523 ms | **9.742 ms** | |
-| GPU (Vulkan) | 1024² | 2048² | 4.933 ms | **45.688 ms** | 16 tile |
+| CPU | 256² | 512² | 131–242 ms | **1,50–1,79 dtk** | satu lintasan |
+| CPU | 512² | 1024² | 142–180 ms | **5,70–7,32 dtk** | satu lintasan |
+| CPU | 1024² | 2048² | 166–266 ms | **32,7–38,6 dtk** | 16 tile |
+| GPU (Vulkan) | 256² | 512² | 4,80–5,65 dtk | **2,34–2,40 dtk** | muat termasuk inisialisasi Vulkan |
+| GPU (Vulkan) | 512² | 1024² | 4,15–4,52 dtk | **9,57–9,74 dtk** | |
+| GPU (Vulkan) | 1024² | 2048² | 3,28–4,93 dtk | **45,1–45,7 dtk** | 16 tile |
 
 **Temuan penting:**
 
-1. **Vulkan lebih lambat daripada CPU di HP ini** pada semua ukuran (2.402 vs 1.503 ms;
-   45.688 vs 38.593 ms). Model ini hanya 41 lapisan dengan tensor kecil, sehingga
+1. **Vulkan lebih lambat daripada CPU di HP ini** pada semua ukuran (2,34 vs 1,50 dtk;
+   45,1 vs 32,7 dtk). Model ini hanya 41 lapisan dengan tensor kecil, sehingga
    biaya *dispatch* per lapisan di Adreno 610 lebih besar daripada keuntungan paralelnya.
-   Inisialisasi Vulkan juga menambah ±4,5 detik pada pemuatan model.
+   Inisialisasi Vulkan juga menambah ±4 detik pada pemuatan model — untuk satu foto,
+   kerugian itu tidak pernah terbayar.
 2. **Satu lintasan 1024² mematikan aplikasi** (proses hilang tanpa log Java — kehabisan
    memori native). Pemotongan tile bukan optimasi, melainkan syarat agar tidak mati.
 3. Hasil CPU dan GPU identik pada piksel contoh (`-16449295, -16744207, -65537`),
    jadi jalur Vulkan secara numerik benar — hanya tidak ekonomis.
-4. Kecepatan ini **jauh dari cukup** untuk foto 12 MP: 1024² saja butuh ±39 detik.
+4. Kecepatan ini **jauh dari cukup** untuk foto 12 MP: 1024² saja butuh ±33 detik.
    Perlu model lebih ringan, resolusi kerja lebih kecil, atau pembatasan sisi panjang.
+5. Tangkapan layar bukti: `assets/screenshots/fase0-uji-mesin.png` (tabel GPU).
 
 ## 6. Hasil: foto #1 (referensi)
 
@@ -168,12 +172,12 @@ Skala: 1 (tidak terlihat peningkatan) sampai 5 (sangat jelas).
 | Tile default (CPU) | 256 | Sama; CPU justru lebih cepat dari GPU. |
 | Batas sisi panjang output (px) | 2048 | Batas tertinggi yang terbukti selesai tanpa dimatikan sistem. |
 | Batas input per skala (px) | 2x: 1024, 3x: belum, 4x: belum | Hanya x2 yang diukur; x4 belum dijalankan di perangkat. |
-| Pemetaan preset Cepat | CPU, 2x, sisi masuk ≤ 512 | 7,3 dtk untuk 512² — masih terasa lama tapi paling dekat ke "cepat". |
-| Pemetaan preset Seimbang | CPU, 2x, sisi masuk ≤ 1024 | 38,6 dtk. |
+| Pemetaan preset Cepat | CPU, 2x, sisi masuk ≤ 512 | 5,7–7,3 dtk untuk 512² — masih terasa lama tapi paling dekat ke "cepat". |
+| Pemetaan preset Seimbang | CPU, 2x, sisi masuk ≤ 1024 | 32,7–38,6 dtk. |
 | Pemetaan preset Maksimal | **belum bisa dipetakan** | Perlu model/resolusi lain; x4 belum diukur dan kemungkinan kehabisan memori. |
-| NFR-P2 (foto 1000×1000, 4x, GPU) | ☑ **Tidak terpenuhi** | Target ≤ 20 dtk. Yang terukur: 1024² **2x** di GPU = 45,7 dtk. 4x akan jauh lebih berat. |
-| NFR-P3 (CPU fallback) | ☑ **Tidak terpenuhi** | Target ≤ 120 dtk untuk 4x; 1024² **2x** di CPU saja 38,6 dtk, dan x4 ≈ 4× beban. |
-| Apakah video layak di HP ini? | ☑ **Tidak** | Satu frame 512² butuh 7,3 dtk CPU. 300 frame (10 dtk @30fps) ≈ 36 menit. |
+| NFR-P2 (foto 1000×1000, 4x, GPU) | ☑ **Tidak terpenuhi** | Target ≤ 20 dtk. Yang terukur: 1024² **2x** di GPU = 45,1–45,7 dtk. 4x akan jauh lebih berat. |
+| NFR-P3 (CPU fallback) | ☑ **Tidak terpenuhi** | Target ≤ 120 dtk untuk 4x; 1024² **2x** di CPU saja 32,7–38,6 dtk, dan x4 ≈ 4× beban. |
+| Apakah video layak di HP ini? | ☑ **Tidak** | Satu frame 512² butuh 5,7–7,3 dtk CPU. 300 frame (10 dtk @30fps) ≈ 29–37 menit. |
 
 ## 12. Kesimpulan dan tindak lanjut
 
@@ -183,7 +187,7 @@ Skala: 1 (tidak terlihat peningkatan) sampai 5 (sangat jelas).
 - **Masalah yang ditemukan:**
   1. Vulkan di Adreno 610 **lebih lambat** daripada CPU 4 thread untuk model sekecil ini.
   2. Tanpa tile, citra 1024² menghabiskan memori dan proses dimatikan sistem.
-  3. Kecepatan absolut terlalu rendah: 38,6 dtk (CPU) untuk 1024²→2048².
+  3. Kecepatan absolut terlalu rendah: 32,7–38,6 dtk (CPU) untuk 1024²→2048².
 - **Perubahan yang harus dibawa ke PRD:**
   - NFR-P2 dan NFR-P3 perlu angka baru yang realistis, atau ruang lingkup foto dibatasi
     (mis. sisi masuk ≤ 768 px) dan janji waktunya diturunkan.
