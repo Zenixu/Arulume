@@ -117,9 +117,91 @@ class EnhancerPlugin : Plugin() {
     }
 
     /**
-     * Membuka halaman rilis di browser (Docs/AGENTS.md aturan #1: aplikasi
-     * tidak punya izin INTERNET, jadi unduhan & pemasangan diserahkan ke
-     * browser/sistem).
+     * Memeriksa rilis terbaru langsung dari dalam aplikasi (Docs/AGENTS.md #1,
+     * pengecualian 2026-10-31: hanya untuk pembaruan). Jaringan jalan di worker.
+     */
+    @PluginMethod
+    fun cekUpdate(call: PluginCall) {
+        worker.execute {
+            val hasil = Pembaruan.cek(context)
+            val o = JSObject()
+                .put("versiSekarang", hasil.versiSekarang)
+                .put("adaBaru", hasil.adaBaru)
+            hasil.info?.let { info ->
+                o.put("versiTerbaru", info.versi)
+                    .put("catatan", info.catatan)
+                    .put("namaBerkas", info.namaBerkas)
+                    .put("ukuran", info.ukuran)
+                    .put("url", info.urlUnduh)
+            }
+            if (hasil.galat != null) o.put("galat", hasil.galat)
+            call.resolve(o)
+        }
+    }
+
+    /** Mengunduh APK pembaruan; progres dikirim lewat event `updateProgress`. */
+    @PluginMethod
+    fun unduhUpdate(call: PluginCall) {
+        val url = call.getString("url")
+        val nama = call.getString("nama") ?: "Arulume.apk"
+        val ukuran = call.getDouble("ukuran")?.toLong() ?: 0L
+        if (url == null) {
+            call.reject("Alamat unduhan kosong", "E_ARGS")
+            return
+        }
+        if (!url.startsWith("https://")) {
+            call.reject("Alamat unduhan harus https", "E_ARGS")
+            return
+        }
+        worker.execute {
+            try {
+                val berkas = Pembaruan.unduh(
+                    context,
+                    Pembaruan.Info("", "", nama, ukuran, url),
+                ) { persen ->
+                    notifyListeners(
+                        "updateProgress",
+                        JSObject().put("percent", persen).put("total", ukuran),
+                    )
+                }
+                call.resolve(
+                    JSObject()
+                        .put("ok", true)
+                        .put("path", berkas.absolutePath)
+                        .put("ukuran", berkas.length()),
+                )
+            } catch (t: Throwable) {
+                Log.w(TAG, "Unduh pembaruan gagal: ${t.message}")
+                call.reject(t.message ?: "Unduhan gagal", "E_UNDUH")
+            }
+        }
+    }
+
+    /** Membuka pemasang Android untuk APK yang sudah diunduh. */
+    @PluginMethod
+    fun pasangUpdate(call: PluginCall) {
+        val path = call.getString("path")
+        if (path == null) {
+            call.reject("Berkas pembaruan tidak ada", "E_ARGS")
+            return
+        }
+        val berkas = File(path)
+        if (!berkas.exists() || berkas.length() < 1024) {
+            call.reject("Berkas pembaruan tidak utuh", "E_ARGS")
+            return
+        }
+        try {
+            Pembaruan.pasang(context, berkas)
+            call.resolve(JSObject().put("ok", true))
+        } catch (t: Throwable) {
+            Log.e(TAG, "Pemasang tidak bisa dibuka", t)
+            call.reject("Tidak bisa membuka pemasang", "E_UNKNOWN")
+        }
+    }
+
+    /**
+     * Membuka halaman rilis di browser. Dipertahankan sebagai jalan cadangan
+     * bila pemeriksaan di dalam aplikasi gagal.
      */
     @PluginMethod
     fun bukaHalamanRilis(call: PluginCall) {

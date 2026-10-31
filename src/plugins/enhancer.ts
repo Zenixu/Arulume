@@ -264,6 +264,23 @@ export interface VideoFailedEvent {
   bisaLanjut?: boolean;
 }
 
+/** Hasil pemeriksaan pembaruan dari halaman rilis GitHub. */
+export interface UpdateCheck {
+  versiSekarang: string;
+  adaBaru: boolean;
+  versiTerbaru?: string;
+  catatan?: string;
+  namaBerkas?: string;
+  ukuran?: number;
+  url?: string;
+  galat?: string;
+}
+
+export interface UpdateProgressEvent {
+  percent: number;
+  total: number;
+}
+
 export interface VideoStatus {
   jobId?: string;
   stage?: string;
@@ -316,10 +333,20 @@ export interface EnhancerPlugin {
   /** Versi aplikasi yang terpasang. */
   versiApp(): Promise<{ nama: string; kode: number }>;
   /**
-   * Membuka halaman rilis di browser. Aplikasi tidak punya izin internet,
-   * jadi unduhan & pemasangan APK dikerjakan browser/sistem.
+   * Membuka halaman rilis di browser — jalan cadangan bila pemeriksaan di
+   * dalam aplikasi gagal.
    */
   bukaHalamanRilis(opts?: { url?: string }): Promise<{ ok: boolean }>;
+  /** Memeriksa rilis terbaru langsung dari GitHub (hanya untuk pembaruan). */
+  cekUpdate(): Promise<UpdateCheck>;
+  /** Mengunduh APK pembaruan; progres lewat event `updateProgress`. */
+  unduhUpdate(opts: {
+    url: string;
+    nama?: string;
+    ukuran?: number;
+  }): Promise<{ ok: boolean; path: string; ukuran: number }>;
+  /** Membuka pemasang Android untuk APK yang sudah diunduh. */
+  pasangUpdate(opts: { path: string }): Promise<{ ok: boolean }>;
   /** Melanjutkan job video yang terhenti dari frame terakhir. */
   lanjutkanVideo(): Promise<{
     jobId: string;
@@ -368,6 +395,10 @@ export interface EnhancerPlugin {
   addListener(
     ev: "videoFailed",
     fn: (e: VideoFailedEvent) => void,
+  ): Promise<PluginListenerHandle>;
+  addListener(
+    ev: "updateProgress",
+    fn: (e: UpdateProgressEvent) => void,
   ): Promise<PluginListenerHandle>;
 }
 

@@ -16,7 +16,7 @@ Dokumen utama (baca sesuai kebutuhan):
 
 ## Aturan mutlak (jangan dilanggar)
 
-1. **Jangan menambahkan izin `INTERNET`** atau pustaka yang membutuhkan jaringan (analitik, crash reporter jarak jauh, iklan, CDN font, pemuatan model dari URL). Aplikasi harus berfungsi 100% offline.
+1. **Jaringan hanya untuk pembaruan.** Pemrosesan foto/video harus tetap 100% offline dan **tidak boleh** ada analitik, crash reporter jarak jauh, iklan, CDN font, atau pemuatan model dari URL. Satu-satunya pemakaian jaringan yang diizinkan: **memeriksa dan mengunduh APK pembaruan dari halaman rilis resmi** `https://github.com/Zenixu/Arulume/releases` (izin `INTERNET` + `REQUEST_INSTALL_PACKAGES`, lihat `Pembaruan.kt`). Pengecualian ini disetujui pemilik proyek pada 2026-10-31; jangan menambah pemakaian jaringan lain tanpa persetujuan baru.
 2. **Jangan menjalankan inferensi AI di JavaScript/WebView.** Semua inferensi di native (ncnn).
 3. **Jangan memblokir thread UI atau thread plugin Capacitor** dengan pekerjaan berat. Pekerjaan berat berjalan di `enhancer-worker`.
 4. **Jangan menulis hasil ke folder `assets` atau menimpa file asli pengguna.** Simpan hasil lewat MediaStore atau `filesDir`.

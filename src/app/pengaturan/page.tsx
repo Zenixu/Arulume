@@ -11,7 +11,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Mascot, MASCOT_ROLE } from "@/components/mascot";
 import { IconArrowLeft, IconChevronRight } from "@/components/icons";
-import { Enhancer, isNative } from "@/plugins/enhancer";
+import { Enhancer, isNative, type UpdateCheck } from "@/plugins/enhancer";
 import {
   bacaFormat,
   bacaSkalaBawaan,
@@ -27,7 +27,7 @@ import {
 } from "@/lib/settings";
 
 /** Cadangan bila versi tidak terbaca dari paket (mis. saat pratinjau web). */
-const VERSI_WEB = "0.0.1";
+const VERSI_WEB = "0.1.2";
 
 /** Halaman rilis resmi — dibuka di browser, bukan diunduh di dalam app. */
 const TAUTAN_RILIS = "https://github.com/Zenixu/Arulume/releases/latest";
@@ -71,6 +71,10 @@ export default function Pengaturan() {
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [versi, setVersi] = useState(VERSI_WEB);
+  const [upCek, setUpCek] = useState<UpdateCheck | null>(null);
+  const [upBusy, setUpBusy] = useState(false);
+  const [upPersen, setUpPersen] = useState<number | null>(null);
+  const [upPath, setUpPath] = useState<string | null>(null);
 
   useEffect(() => {
     setTema(bacaTema());
@@ -96,24 +100,78 @@ export default function Pengaturan() {
     };
   }, []);
 
-  /** Buka halaman rilis di browser: unduh APK, lalu pasang seperti biasa. */
+  /** Cek versi terbaru langsung dari dalam aplikasi (tanpa keluar). */
   async function periksaUpdate() {
-    if (busy) return;
-    setBusy(true);
+    if (upBusy) return;
+    setUpBusy(true);
+    setUpPath(null);
+    setUpPersen(null);
+    setUpCek(null);
     setNotice(null);
     try {
       if (!isNative()) {
-        setNotice("Pembaruan hanya bisa dibuka dari aplikasi Android.");
+        setNotice("Pembaruan hanya bisa diperiksa dari aplikasi Android.");
         return;
       }
-      await Enhancer.bukaHalamanRilis({ url: TAUTAN_RILIS });
+      const hasil = await Enhancer.cekUpdate();
+      setUpCek(hasil);
+      if (hasil.versiSekarang) setVersi(hasil.versiSekarang);
+    } catch {
+      setUpCek({
+        versiSekarang: versi,
+        adaBaru: false,
+        galat: "Tidak bisa memeriksa pembaruan.",
+      });
+    } finally {
+      setUpBusy(false);
+    }
+  }
+
+  /** Unduh APK pembaruan dengan progres, di dalam aplikasi. */
+  async function unduhPembaruan() {
+    if (upBusy || !upCek?.url) return;
+    setUpBusy(true);
+    setUpPersen(0);
+    setNotice(null);
+    const telinga = await Enhancer.addListener("updateProgress", (e) =>
+      setUpPersen(e.percent ?? 0),
+    );
+    try {
+      const r = await Enhancer.unduhUpdate({
+        url: upCek.url,
+        nama: upCek.namaBerkas,
+        ukuran: upCek.ukuran,
+      });
+      setUpPath(r.path);
+      setNotice("Unduhan selesai. Ketuk Pasang sekarang.");
+    } catch {
+      setNotice("Unduhan gagal. Periksa koneksi lalu coba lagi.");
+    } finally {
+      await telinga.remove();
+      setUpBusy(false);
+      setUpPersen(null);
+    }
+  }
+
+  /** Buka pemasang Android untuk APK yang sudah diunduh. */
+  async function pasangPembaruan() {
+    if (!upPath) return;
+    try {
+      await Enhancer.pasangUpdate({ path: upPath });
       setNotice(
-        "Halaman rilis dibuka di browser. Unduh APK terbaru, lalu pasang — data dan hasil tidak terhapus.",
+        "Ikuti petunjuk pemasang. Bila diminta, izinkan Arulume memasang aplikasi.",
       );
     } catch {
+      setNotice("Pemasang tidak bisa dibuka. Coba lagi.");
+    }
+  }
+
+  /** Jalan cadangan: buka halaman rilis di browser. */
+  async function bukaRilis() {
+    try {
+      await Enhancer.bukaHalamanRilis({ url: TAUTAN_RILIS });
+    } catch {
       setNotice("Tidak ada browser untuk membuka halaman rilis.");
-    } finally {
-      setBusy(false);
     }
   }
 
@@ -265,16 +323,90 @@ export default function Pengaturan() {
           <button
             type="button"
             onClick={periksaUpdate}
-            disabled={busy}
+            disabled={upBusy}
             className="flex h-12 items-center justify-between rounded-md border border-border bg-surface px-4 text-body text-text disabled:opacity-60"
           >
-            <span>{busy ? "Membuka…" : "Periksa update"}</span>
-            <IconChevronRight size={18} className="text-text-2" />
+            <span>{upBusy ? "Memeriksa…" : "Periksa update"}</span>
+            <span className="text-caption text-text-2">v{versi}</span>
           </button>
+
+          {upCek && !upCek.galat && !upCek.adaBaru ? (
+            <p role="status" className="text-caption text-text-2">
+              Kamu sudah memakai versi terbaru (v{upCek.versiSekarang}).
+            </p>
+          ) : null}
+
+          {upCek?.galat ? (
+            <div className="flex flex-col gap-1 rounded-sm bg-surface-2 px-3 py-2">
+              <p role="status" className="text-caption text-text-2">
+                {upCek.galat}
+              </p>
+              <button
+                type="button"
+                onClick={bukaRilis}
+                className="self-start text-caption text-accent-text underline-offset-4"
+              >
+                Buka halaman rilis di browser
+              </button>
+            </div>
+          ) : null}
+
+          {upCek?.adaBaru ? (
+            <div className="flex flex-col gap-3 rounded-md border border-accent bg-surface px-4 py-3">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-body text-text">
+                  Versi {upCek.versiTerbaru} tersedia
+                </span>
+                <span className="text-caption text-text-2">
+                  {upCek.ukuran
+                    ? `${(upCek.ukuran / (1024 * 1024)).toFixed(1)} MB · pemasangan tidak menghapus data`
+                    : "Pemasangan tidak menghapus data"}
+                </span>
+              </div>
+
+              {upPersen !== null ? (
+                <div
+                  role="progressbar"
+                  aria-valuenow={upPersen}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  className="h-2 w-full overflow-hidden rounded-full bg-surface-2"
+                >
+                  <div
+                    className="h-full rounded-full bg-accent transition-[width]"
+                    style={{ width: `${Math.max(3, upPersen)}%` }}
+                  />
+                </div>
+              ) : null}
+
+              {upPath ? (
+                <button
+                  type="button"
+                  onClick={pasangPembaruan}
+                  className="flex h-12 w-full items-center justify-center rounded-md bg-accent text-body text-on-accent transition-opacity active:opacity-90"
+                >
+                  Pasang sekarang
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={unduhPembaruan}
+                  disabled={upBusy}
+                  className="flex h-12 w-full items-center justify-center rounded-md bg-accent text-body text-on-accent transition-opacity active:opacity-90 disabled:opacity-60"
+                >
+                  {upBusy
+                    ? `Mengunduh ${upPersen ?? 0}%`
+                    : "Unduh pembaruan"}
+                </button>
+              )}
+            </div>
+          ) : null}
+
           <p className="text-caption text-text-2">
-            Membuka halaman rilis Arulume di browser. Aplikasi ini tidak punya
-            akses internet, jadi unduhan dan pemasangan dikerjakan sistem —
-            tidak ada data yang dikirim keluar.
+            Diperiksa langsung di dalam aplikasi. Satu-satunya pemakaian
+            internet adalah memeriksa dan mengunduh pembaruan dari halaman rilis
+            resmi Arulume — tidak ada analitik, pelacakan, atau unggahan data.
+            Pemrosesan foto dan video tetap sepenuhnya di HP ini.
           </p>
         </section>
 

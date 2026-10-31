@@ -2,13 +2,17 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!--
-      ATURAN MUTLAK (Docs/AGENTS.md #1): JANGAN menambahkan izin INTERNET.
-      Aplikasi harus berfungsi 100% offline. Capacitor menyajikan aset dari
-      assets/public di dalam proses, jadi tidak butuh jaringan.
-      Verifikasi: aapt dump permissions app-release.apk  → INTERNET tidak muncul.
-      Kalau UI gagal dimuat tanpa izin ini, itu risiko R6 di PRD — lapor, jangan
-      diam-diam menambah izinnya.
+      INTERNET — SATU-SATUNYA pemakaian yang diizinkan (Docs/AGENTS.md #1,
+      pengecualian 2026-10-31 atas permintaan pemilik proyek): memeriksa dan
+      mengunduh APK pembaruan dari halaman rilis resmi
+      https://github.com/Zenixu/Arulume/releases. Tidak ada analitik, pelacakan,
+      iklan, crash reporter, atau unggahan data pengguna. Pemrosesan foto/video
+      tetap 100% offline. Jangan menambah pemakaian jaringan lain.
     -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Memasang APK pembaruan yang sudah diunduh (Android 8+). -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <!-- Vulkan opsional: APK tetap bisa dipasang di HP tanpa Vulkan (fallback CPU) -->
     <uses-feature
@@ -67,7 +71,7 @@
 
     <!--
       Izin:
-      - INTERNET: DIHAPUS (offline total).
+      - INTERNET: hanya untuk cek & unduh pembaruan dari GitHub Releases.
       - READ_MEDIA_IMAGES / READ_EXTERNAL_STORAGE: tidak dipakai (Photo Picker/SAF).
       - WRITE_EXTERNAL_STORAGE: hanya untuk Android 9 ke bawah (simpan ke galeri).
       - FOREGROUND_SERVICE (+ DATA_SYNC di Android 14+), WAKE_LOCK,
