@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Latar ikon adaptif: sama dengan token bg gelap di Docs/design.md -->
-    <color name="ic_launcher_background">#111214</color>
+    <!-- Latar ikon adaptif: putih, mengikuti latar logo Arulume -->
+    <color name="ic_launcher_background">#FFFFFF</color>
 </resources>

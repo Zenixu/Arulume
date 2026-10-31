@@ -47,6 +47,7 @@ Catatan penting:
 |---|---|---|
 | Plus Jakarta Sans (atau Inter/DM Sans) | SIL Open Font License 1.1 | Dibundel lokal; sertakan teks lisensi |
 | Ikon (outline) | Tergantung set ikon yang dipilih | Catat nama set dan lisensinya saat dipilih |
+| Logo Arulume (ikon peluncur) | **Milik proyek** (berkas dari pemilik) | `assets/logo/ikon.png` — kucing berbentuk huruf "A", dipakai sebagai ikon aplikasi lewat `assets/logo/buat-ikon.py`. Dibuat untuk Arulume; bukan aset pihak ketiga. |
 | Maskot Aru | **Open source (dinyatakan pemilik)** | Set 40 ekspresi di `assets/mascot/`, di-*trace* dari lembar stiker yang pemilik ambil dari set open-source di internet (pin). Pemilik menyatakan penggunaannya aman. **Catatan:** URL sumber dan nama lisensinya belum dicatat — lengkapi baris ini dengan tautan aslinya sebelum APK dibagikan ke orang lain, karena "open source" tanpa nama lisensi (MIT/CC0/CC-BY) tidak bisa diverifikasi. |
 
 ## 4. Cara memverifikasi checksum model

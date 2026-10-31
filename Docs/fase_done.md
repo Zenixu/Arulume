@@ -192,6 +192,18 @@ Catatan teknis yang bikin pupil sempat tidak terlihat: isi `<g transform>` pada 
 memakai koordinat path asli (skala 0,1 dan sumbu Y terbalik). Pupil harus digambar **di luar**
 `<g>` dengan koordinat `viewBox`, bukan di dalamnya.
 
+### Ikon peluncur baru
+
+Ikon aplikasi diganti dengan logo Arulume (kucing yang membentuk huruf "A"), tanpa teks —
+nama aplikasi sudah tampil di bawah ikon pada layar utama. Sumber: `assets/logo/ikon.png`,
+pembuat semua ukuran: `assets/logo/buat-ikon.py`.
+
+- Ikon adaptif (Android 8+): latar putih, logo 50 % kanvas 108 dp (zona aman 72 dp),
+  plus lapisan monokrom untuk ikon bertema Android 13+.
+- Ikon lama (Android 7): persegi membulat dan bulat, logo 84 %/78 %.
+- Berkas vektor lama (`drawable/ic_launcher_foreground.xml`, `ic_launcher_monochrome.xml`,
+  `drawable-v24/…`) dihapus supaya tidak ada dua sumber ikon.
+
 Sisa Fase 1:
 
 - Uji di Android 13+ (dialog `POST_NOTIFICATIONS`) dan Android 14+ (`foregroundServiceType` ditegakkan).
