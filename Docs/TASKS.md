@@ -62,26 +62,26 @@ Tujuan: membuktikan jalur teknis dan mengukur performa di HP sendiri.
 ## Fase 1: MVP Foto
 
 ### 1.1 Plugin (P0)
-- [ ] `pickMedia` (Photo Picker, fallback SAF), metadata + thumbnail (FR-01)
-- [ ] `startEnhanceImage` asinkron + event `progress`/`completed`/`failed` (FR-03, FR-04)
-- [ ] `cancelJob` dengan pembersihan file sementara (FR-04)
+- [x] `pickMedia` (Photo Picker, fallback SAF), metadata + thumbnail (FR-01)
+- [x] `startEnhanceImage` asinkron + event `progress`/`completed`/`failed` (FR-03, FR-04)
+- [x] `cancelJob` dengan pembersihan file sementara (FR-04)
 - [ ] Validasi batas output + dialog opsi (perkecil input / turunkan skala)
 - [ ] Orientasi EXIF, alpha (PNG transparan), format JPEG/PNG/WebP, HEIC (API 28+)
 - [ ] Fallback bertahap: tile kecil → CPU → `E_OUT_OF_MEMORY`
-- [ ] `MediaSaver` (galeri `Pictures/Arulume` dan privat) (FR-06)
-- [ ] `PreviewBuilder` untuk sebelum/sesudah (FR-05)
-- [ ] `openInGallery`, `shareResult` (FR-07)
-- [ ] `clearCache`
+- [x] `MediaSaver` (galeri `Pictures/Arulume`, dipanggil dari tombol Simpan) (FR-06)
+- [x] `PreviewBuilder` untuk sebelum/sesudah (FR-05)
+- [x] `openInGallery`, `shareResult` (FR-07)
+- [x] `clearCache`
 
 ### 1.2 UI (P0), mengikuti `design.md`
 - [ ] Komponen dasar: tombol utama/sekunder, chip, segmen, dialog, progress bar
-- [ ] Komponen `<Mascot mood size />` dengan SVG orisinal
-- [ ] Layar Beranda
-- [ ] Layar Editor (preset, skala, Lanjutan)
-- [ ] Layar Memproses
-- [ ] Layar Hasil (slider sebelum/sesudah + cubit-zoom tersinkron + alternatif tombol)
-- [ ] Layar Error
-- [ ] Tema gelap (default) dan terang; font dibundel lokal
+- [x] Komponen `<Mascot mood size />` dengan SVG orisinal
+- [x] Layar Beranda
+- [x] Layar Editor (skala 2×/4×; preset Lanjutan menyusul)
+- [x] Layar Memproses
+- [x] Layar Hasil (pembanding geser + cubit-zoom + alternatif tombol + simpan manual)
+- [x] Layar Error (inline di Editor/Hasil)
+- [x] Tema gelap (default) dan terang; font dibundel lokal
 - [ ] Pemetaan preset → parameter teknis
 
 ### 1.3 P1

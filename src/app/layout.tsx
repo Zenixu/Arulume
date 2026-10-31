@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import { BackHandler } from "@/components/back-handler";
 
 /**
  * Font dibundel lokal — tidak boleh memuat dari CDN/jaringan (AGENTS.md aturan 1).
@@ -56,7 +57,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="min-h-full bg-bg text-text antialiased">{children}</body>
+      <body className="min-h-full bg-bg text-text antialiased">
+        <BackHandler />
+        {children}
+      </body>
     </html>
   );
 }

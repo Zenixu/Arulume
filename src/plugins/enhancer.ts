@@ -72,7 +72,13 @@ export interface ProgressEvent {
 
 export interface CompletedEvent {
   jobId: string;
-  outputUri: string; // content:// atau file path privat
+  /**
+   * Path hasil resolusi penuh di cache aplikasi. Belum masuk galeri: user
+   * melihat dulu di layar Hasil, lalu memanggil `saveToGallery`.
+   */
+  resultPath: string;
+  /** Terisi hanya setelah user menekan Simpan (lihat `SavedResult`). */
+  outputUri: string;
   outputWidth: number;
   outputHeight: number;
   durationMs: number;
@@ -80,6 +86,12 @@ export interface CompletedEvent {
   tileSizeUsed: number;
   beforePreviewPath: string; // file di cache untuk WebView
   afterPreviewPath: string;
+}
+
+export interface SavedResult {
+  uri: string; // content:// di Pictures/Arulume
+  width: number;
+  height: number;
 }
 
 export type ErrorCode =
@@ -132,7 +144,14 @@ export interface EnhancerPlugin {
     type: "image" | "video";
     multiple?: boolean;
   }): Promise<{ items: PickedMedia[] }>;
+  /**
+   * Hasil pemilih foto yang terselamatkan setelah proses aplikasi mati saat
+   * pemilih di depan. `items` kosong kalau tidak ada yang tertunda.
+   */
+  getPendingPick(): Promise<{ items: PickedMedia[] }>;
   startEnhanceImage(opts: EnhanceImageOptions): Promise<{ jobId: string }>;
+  /** Menyalin hasil dari cache ke galeri `Pictures/Arulume`. */
+  saveToGallery(opts: { path: string; quality?: number }): Promise<SavedResult>;
   cancelJob(opts: { jobId: string }): Promise<void>;
   clearCache(): Promise<{ freedBytes: number }>;
   openInGallery(opts: { uri: string }): Promise<void>;

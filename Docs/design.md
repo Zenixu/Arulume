@@ -244,9 +244,11 @@ Pemetaan preset ke parameter teknis (disesuaikan setelah benchmark Fase 0):
 - Jika pindah ke GPU→CPU: pesan kecil "Beralih ke mode standar".
 
 ### 7.4 Hasil
-- **Slider sebelum/sesudah** mengambil ±70% tinggi layar; petunjuk cubit-zoom muncul sekali.
-- Info: resolusi baru, lama proses, status "Tersimpan di Galeri".
-- Aksi: **"Bagikan"** dan **"Buka di Galeri"** (sekunder), **"Tingkatkan Lagi"**, **"Selesai"** (utama).
+- **Pembanding sebelum/sesudah** (maks ±52% tinggi layar): satu jari menggeser batas, dua jari mencubit untuk zoom sampai 5×, tombol `−`/`+` dan `Perkecil` untuk yang tidak memakai gerakan.
+- Selalu ada alternatif tombol **Bandingkan / Sebelum / Sesudah** (wajib, tidak boleh hanya mengandalkan geser).
+- Info: resolusi hasil, lama proses, status simpan — "Belum disimpan" atau "Tersimpan di Galeri".
+- Aksi: **"Simpan ke Galeri"** (utama, hanya sebelum disimpan) → berubah jadi **"Buka di Galeri"**; **"Bagikan"** (nonaktif sebelum disimpan) dan **"Selesai"** (sekunder).
+- Hasil **tidak** masuk galeri sendiri (PRD FR-06 revisi): user memastikan dulu, baru mengunduh.
 - Maskot tidak ada di area foto; boleh berbinar sesaat saat pertama muncul (≤ 64 dp, di luar foto).
 
 ### 7.5 Riwayat

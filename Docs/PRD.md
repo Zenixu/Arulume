@@ -308,12 +308,13 @@ Detail pipeline ada di bagian 11.1. Persyaratan:
 - Slider berjalan mulus (tanpa patah-patah jelas) pada HP target.
 - Membuka foto hasil 4096 px tidak membuat WebView crash.
 
-#### FR-06 Penyimpanan hasil (P0)
-- Default: simpan ke galeri di `Pictures/Arulume/` lewat MediaStore.
-- Nama file: `{namaAsli}_enh_{skala}x_{yyyyMMdd-HHmmss}.{ext}`.
-- Alternatif: penyimpanan privat aplikasi (`filesDir`), tidak muncul di galeri.
+#### FR-06 Penyimpanan hasil (P0) — direvisi 31 Oktober 2026
+- Hasil **tidak** otomatis masuk galeri. Selesai diproses, hasil ditulis ke cache privat (`cacheDir/hasil/`) dan layar Hasil menampilkan perbandingan sebelum/sesudah.
+- User menekan **"Simpan ke Galeri"** → barulah disalin ke `Pictures/Arulume/` lewat MediaStore. Tanpa tekan, tidak ada berkas baru di galeri.
+- Nama file: `Arulume_{yyyyMMdd-HHmmss}.jpg`.
+- Hasil di cache dipangkas otomatis (sisakan 3 terbaru) supaya tidak menumpuk.
 - Tidak pernah menimpa file asli.
-- Pada Android 9 ke bawah, gunakan izin `WRITE_EXTERNAL_STORAGE` hanya bila `maxSdkVersion=28`.
+- Pada Android 9 ke bawah, izin `WRITE_EXTERNAL_STORAGE` diminta saat menekan Simpan (bukan saat proses), dengan `maxSdkVersion=28`.
 
 **Kriteria penerimaan:**
 - Hasil muncul di aplikasi Galeri dalam hitungan detik setelah selesai.

@@ -80,3 +80,11 @@ export function IconCheck({ className, size = 24 }: IconProps) {
     </svg>
   );
 }
+
+export function IconDownload({ className, size = 24 }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M12 4v11M7 12l5 5 5-5M4 20h16" />
+    </svg>
+  );
+}

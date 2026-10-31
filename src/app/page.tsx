@@ -1,23 +1,46 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Mascot, MASCOT_ROLE } from "@/components/mascot";
 import {
   IconPhotoPlus,
-  IconPlane,
   IconSettings,
   IconVideo,
 } from "@/components/icons";
 import { Enhancer, isNative } from "@/plugins/enhancer";
+import { useJobStore } from "@/lib/job-store";
 
 /**
  * Layar Beranda — Docs/design.md bagian 7.1.
  * Satu aksi utama ("Pilih Foto"), satu aksi sekunder ("Pilih Video", Fase 2).
  */
 export default function Beranda() {
+  const router = useRouter();
+  const setPhoto = useJobStore((s) => s.setPhoto);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  // Kalau proses mati saat pemilih foto di depan, hasilnya diselamatkan plugin
+  // dan diambil di sini supaya alurnya tidak putus.
+  useEffect(() => {
+    if (!isNative()) return;
+    let batal = false;
+    (async () => {
+      try {
+        const { items } = await Enhancer.getPendingPick();
+        if (batal || items.length === 0) return;
+        setPhoto(items[0]);
+        router.push("/editor");
+      } catch {
+        // Diamkan: tidak ada yang tertunda.
+      }
+    })();
+    return () => {
+      batal = true;
+    };
+  }, [router, setPhoto]);
 
   async function pilihFoto() {
     setNotice(null);
@@ -31,16 +54,17 @@ export default function Beranda() {
     try {
       const { items } = await Enhancer.pickMedia({ type: "image" });
       if (items.length === 0) return;
-      setNotice(`${items[0].name} · ${items[0].width}×${items[0].height}`);
+      setPhoto(items[0]);
+      router.push("/editor");
     } catch (e) {
       const err = e as { code?: string; message?: string };
       const code = err.code ?? "";
-      // `pickMedia` menyusul di Fase 1. Jangan bocorkan kode internal Capacitor
-      // (UNIMPLEMENTED) ke layar — AGENTS.md: setiap error memakai ErrorCode PRD.
-      if (code === "UNIMPLEMENTED" || /unimplemented/i.test(err.message ?? "")) {
-        setNotice("Pemilih foto menyusul di Fase 1. Untuk sekarang, cek Info perangkat.");
-      } else if (code === "E_PICK_CANCELLED") {
+      // Jangan bocorkan kode internal Capacitor (UNIMPLEMENTED) ke layar —
+      // AGENTS.md: setiap error memakai ErrorCode dari PRD bagian 10.
+      if (code === "E_PICK_CANCELLED") {
         setNotice(null);
+      } else if (code === "UNIMPLEMENTED" || /unimplemented/i.test(err.message ?? "")) {
+        setNotice("Pemilih foto belum aktif di build ini.");
       } else {
         setNotice(`Gagal memilih foto (${code || "E_UNKNOWN"}).`);
       }
@@ -51,14 +75,10 @@ export default function Beranda() {
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col px-5">
-      {/* Bar atas: nama, badge Offline, pengaturan */}
+      {/* Bar atas: nama + pengaturan */}
       <header className="flex h-16 items-center justify-between">
         <span className="text-title tracking-tight">Arulume</span>
         <div className="flex items-center gap-2">
-          <span className="flex items-center gap-1.5 rounded-full bg-surface-2 px-2.5 py-1 text-caption text-text-2">
-            <IconPlane size={14} />
-            Offline
-          </span>
           <Link
             href="/uji"
             aria-label="Info perangkat (uji Fase 0)"

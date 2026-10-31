@@ -1,22 +1,33 @@
 package id.aruthtale.arulume
 
+import android.Manifest
+import android.app.Activity
 import android.app.ActivityManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.net.Uri
 import android.opengl.EGL14
 import android.opengl.EGLConfig
 import android.opengl.GLES20
 import android.os.Build
 import android.os.SystemClock
+import android.provider.MediaStore
 import android.util.Log
 import com.getcapacitor.JSArray
 import com.getcapacitor.JSObject
+import com.getcapacitor.PermissionState
 import com.getcapacitor.Plugin
 import com.getcapacitor.PluginCall
 import com.getcapacitor.PluginMethod
 import com.getcapacitor.annotation.CapacitorPlugin
+import com.getcapacitor.annotation.Permission
+import com.getcapacitor.annotation.PermissionCallback
 import java.io.File
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Plugin `Enhancer` — Docs/PRD.md bagian 10, Docs/ARCHITECTURE.md bagian 6.
@@ -25,11 +36,28 @@ import java.util.concurrent.Executors
  * - Metode @PluginMethod hanya memvalidasi dan memulai job, lalu kembali segera.
  * - Setiap error membawa kode dari daftar ErrorCode. Tidak ada error tanpa kode.
  *
- * Status Fase 0: getCapabilities + clearCache jalan. pickMedia/startEnhanceImage
- * menyusul di Fase 1 (belum didaftarkan supaya tidak ada stub yang menyesatkan).
+ * Status Fase 1: getCapabilities, clearCache, pickMedia, startEnhanceImage,
+ * cancelJob, openInGallery, shareResult jalan. Video menyusul di Fase 2.
  */
-@CapacitorPlugin(name = "Enhancer")
+@CapacitorPlugin(
+    name = "Enhancer",
+    permissions = [
+        Permission(
+            alias = "storage",
+            strings = [Manifest.permission.WRITE_EXTERNAL_STORAGE],
+        ),
+    ],
+)
 class EnhancerPlugin : Plugin() {
+
+    override fun load() {
+        instance = this
+    }
+
+    override fun handleOnDestroy() {
+        if (instance === this) instance = null
+        super.handleOnDestroy()
+    }
 
     @PluginMethod
     fun getCapabilities(call: PluginCall) {
@@ -47,12 +75,15 @@ class EnhancerPlugin : Plugin() {
         call.resolve(ret)
     }
 
-    /** Menghapus cache pratinjau (`cacheDir/enhancer/`). Docs/ARCHITECTURE.md bagian 8. */
+    /** Menghapus cache pratinjau (`cacheDir/enhancer/` dan `cacheDir/hasil/`). Docs/ARCHITECTURE.md bagian 8. */
     @PluginMethod
     fun clearCache(call: PluginCall) {
-        val dir = File(context.cacheDir, "enhancer")
-        val freed = dirSize(dir)
-        val ok = !dir.exists() || dir.deleteRecursively()
+        val dirs = listOf(
+            File(context.cacheDir, "enhancer"),
+            ImagePipeline.resultsDir(context),
+        )
+        val freed = dirs.sumOf { dirSize(it) }
+        val ok = dirs.all { !it.exists() || it.deleteRecursively() }
         if (!ok) {
             call.reject("Gagal menghapus cache", "E_UNKNOWN")
             return
@@ -145,6 +176,459 @@ class EnhancerPlugin : Plugin() {
                 }
             }
         }
+    }
+
+    // ------------------------------------------------------- Fase 1: foto
+
+    /**
+     * Photo Picker (API 33+) dengan fallback SAF `ACTION_OPEN_DOCUMENT`.
+     * Tidak butuh izin apa pun: sistem yang memberi izin baca per-URI.
+     */
+    @PluginMethod
+    fun pickMedia(call: PluginCall) {
+        val mediaType = call.getString("type") ?: "image"
+        if (mediaType != "image") {
+            call.reject("Video menyusul di Fase 2", "E_UNSUPPORTED_FORMAT")
+            return
+        }
+        if (pendingPick) {
+            call.reject("Pemilihan lain masih berjalan", "E_BUSY")
+            return
+        }
+
+        val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Intent(MediaStore.ACTION_PICK_IMAGES).apply { this.type = "image/*" }
+        } else {
+            Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                this.type = "image/*"
+            }
+        }
+
+        pendingPick = true
+        pendingPickCall = call
+        try {
+            // Sengaja lewat Activity + requestCode sendiri: jalur callback Capacitor
+            // hilang kalau proses mati saat pemilih di depan (MIUI), sedangkan
+            // MainActivity.onActivityResult selalu kebagian hasilnya.
+            activity.startActivityForResult(intent, REQ_PICK)
+        } catch (t: Throwable) {
+            pendingPick = false
+            pendingPickCall = null
+            Log.e(TAG, "Pemilih foto gagal dibuka", t)
+            call.reject("Pemilih foto tidak tersedia di perangkat ini", "E_UNKNOWN")
+        }
+    }
+
+    /** Dipanggil `MainActivity` setelah pemilih foto selesai. */
+    fun onPickResult(ok: Boolean, uri: Uri?) {
+        val call = pendingPickCall ?: return
+        pendingPickCall = null
+        pendingPick = false
+        if (!ok || uri == null) {
+            call.reject("Pemilihan dibatalkan", "E_PICK_CANCELLED")
+            return
+        }
+        forgetPendingPick()
+        resolvePickedUri(call, uri)
+    }
+
+    /**
+     * Cadangan kalau proses aplikasi mati saat pemilih foto di depan (MIUI agresif
+     * membunuh aplikasi latar). `MainActivity.onActivityResult` menyimpan URI-nya ke
+     * disk; WebView yang lahir ulang memanggil method ini untuk melanjutkan.
+     */
+    @PluginMethod
+    fun getPendingPick(call: PluginCall) {
+        val prefs = context.getSharedPreferences(PREFS_PICK, Context.MODE_PRIVATE)
+        val raw = prefs.getString(KEY_PICK, null)
+        if (raw == null) {
+            call.resolve(JSObject().put("items", JSArray()))
+            return
+        }
+        prefs.edit().remove(KEY_PICK).apply()
+        resolvePickedUri(call, Uri.parse(raw))
+    }
+
+    /** Baca metadata + pratinjau satu URI, lalu balas ke JS. */
+    private fun resolvePickedUri(call: PluginCall, uri: Uri) {
+        // Izin baca bertahan selama sesi; kalau sistem mengizinkan, simpan permanen.
+        try {
+            context.contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION,
+            )
+        } catch (t: Throwable) {
+            Log.d(TAG, "Izin URI tidak permanen: ${t.message}")
+        }
+
+        worker.execute {
+            try {
+                val ctx = context
+                val (name, mime, size) = ImagePipeline.queryMeta(ctx, uri)
+                val (w, h) = ImagePipeline.bounds(ctx, uri)
+                if (w <= 0 || h <= 0) {
+                    call.reject("Foto tidak bisa dibaca", "E_DECODE_FAILED")
+                    return@execute
+                }
+
+                val thumb = ImagePipeline.decode(ctx, uri, 720)
+                val previewPath = if (thumb != null) {
+                    val p = ImagePipeline.writePreview(ctx, thumb, 720)
+                    thumb.recycle()
+                    p
+                } else {
+                    ""
+                }
+
+                val item = JSObject()
+                    .put("uri", uri.toString())
+                    .put("name", name)
+                    .put("mime", mime)
+                    .put("sizeBytes", size)
+                    .put("width", w)
+                    .put("height", h)
+                    .put("previewPath", previewPath)
+
+                call.resolve(JSObject().put("items", JSArray().put(item)))
+            } catch (t: Throwable) {
+                Log.e(TAG, "Baca foto gagal", t)
+                call.reject("Foto tidak bisa dibaca", "E_DECODE_FAILED")
+            }
+        }
+    }
+
+    private fun forgetPendingPick() {
+        context.getSharedPreferences(PREFS_PICK, Context.MODE_PRIVATE)
+            .edit().remove(KEY_PICK).apply()
+    }
+
+    /**
+     * Memulai job perbesar foto. Langsung mengembalikan `jobId`; hasil dikirim
+     * lewat event `progress` / `completed` / `failed` (Docs/PRD.md bagian 10).
+     */
+    @PluginMethod
+    fun startEnhanceImage(call: PluginCall) {
+        val uriStr = call.getString("uri")
+        if (uriStr.isNullOrBlank()) {
+            call.reject("uri kosong", "E_DECODE_FAILED")
+            return
+        }
+        val scale = (call.getInt("scale") ?: 2).coerceIn(2, 4)
+        val modelId = call.getString("model")?.takeIf { it.isNotBlank() }
+            ?: modelForScale(scale)
+        if (modelId == null) {
+            call.reject("Belum ada model di assets/models/", "E_MODEL_MISSING")
+            return
+        }
+
+        val useGpu = call.getBoolean("useGpu") ?: false
+        val tileReq = call.getInt("tileSize") ?: 0
+        val maxOut = (call.getInt("maxOutputLongSide") ?: ImagePipeline.MAX_OUTPUT_SIDE)
+            .coerceIn(256, ImagePipeline.MAX_OUTPUT_SIDE)
+        val out = call.getObject("output")
+        val quality = (out?.getInteger("quality") ?: 95).coerceIn(60, 100)
+
+        val jobId = "job-${jobSeq.incrementAndGet()}"
+        val cancelled = AtomicBoolean(false)
+        activeJobId = jobId
+        activeCancel = cancelled
+
+        // Kontrak: kembali segera, kerja berat di enhancer-worker.
+        call.resolve(JSObject().put("jobId", jobId))
+
+        worker.execute {
+            runEnhanceJob(
+                jobId = jobId,
+                uriStr = uriStr,
+                modelId = modelId,
+                scale = scale,
+                useGpu = useGpu,
+                tileReq = tileReq,
+                maxOut = maxOut,
+                quality = quality,
+                cancelled = cancelled,
+            )
+        }
+    }
+
+    @PluginMethod
+    fun cancelJob(call: PluginCall) {
+        val jobId = call.getString("jobId")
+        val running = activeJobId
+        if (jobId != null && running != null && jobId != running) {
+            call.resolve()
+            return
+        }
+        activeCancel?.set(true)
+        call.resolve()
+    }
+
+    /**
+     * Menyimpan hasil yang sedang dilihat ke galeri `Pictures/Arulume`.
+     * Dipanggil hanya saat user menekan tombol Simpan di layar Hasil.
+     */
+    @PluginMethod
+    fun saveToGallery(call: PluginCall) {
+        val path = call.getString("path")
+        if (path.isNullOrBlank()) {
+            call.reject("Berkas hasil tidak diketahui", "E_SAVE_FAILED")
+            return
+        }
+
+        // Penyimpanan lama (API 24-28) butuh izin tulis; API 29+ tidak.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q &&
+            getPermissionState("storage") != PermissionState.GRANTED
+        ) {
+            requestPermissionForAlias("storage", call, "onStoragePermissionSave")
+            return
+        }
+        doSaveToGallery(call, path)
+    }
+
+    @PermissionCallback
+    private fun onStoragePermissionSave(call: PluginCall) {
+        val path = call.getString("path")
+        if (getPermissionState("storage") == PermissionState.GRANTED && path != null) {
+            doSaveToGallery(call, path)
+        } else {
+            call.reject("Izin menyimpan ke galeri ditolak", "E_SAVE_FAILED")
+        }
+    }
+
+    private fun doSaveToGallery(call: PluginCall, path: String) {
+        val dir = ImagePipeline.resultsDir(context).canonicalPath
+        val file = try {
+            File(path).canonicalFile
+        } catch (t: Throwable) {
+            call.reject("Berkas hasil tidak valid", "E_SAVE_FAILED")
+            return
+        }
+        // Hanya berkas di folder hasil sendiri yang boleh disimpan.
+        if (!file.path.startsWith(dir) || !file.exists()) {
+            call.reject("Hasil sudah tidak ada, coba proses ulang", "E_SAVE_FAILED")
+            return
+        }
+
+        val quality = (call.getInt("quality") ?: 95).coerceIn(60, 100)
+        worker.execute {
+            var bmp: Bitmap? = null
+            try {
+                bmp = ImagePipeline.decodeFile(file.absolutePath)
+                if (bmp == null) {
+                    call.reject("Hasil tidak bisa dibaca", "E_SAVE_FAILED")
+                    return@execute
+                }
+                val saved = ImagePipeline.saveToGallery(context, bmp, quality)
+                if (saved == null) {
+                    call.reject("Gagal menyimpan ke galeri", "E_SAVE_FAILED")
+                    return@execute
+                }
+                call.resolve(
+                    JSObject()
+                        .put("uri", saved.uri.toString())
+                        .put("width", saved.width)
+                        .put("height", saved.height),
+                )
+            } catch (t: Throwable) {
+                Log.e(TAG, "Simpan ke galeri gagal", t)
+                call.reject("Gagal menyimpan ke galeri", "E_SAVE_FAILED")
+            } finally {
+                bmp?.recycle()
+            }
+        }
+    }
+
+    @PluginMethod
+    fun openInGallery(call: PluginCall) {
+        val uriStr = call.getString("uri")
+        if (uriStr.isNullOrBlank()) {
+            call.reject("uri kosong", "E_UNKNOWN")
+            return
+        }
+        try {
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(Uri.parse(uriStr), "image/jpeg")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            context.startActivity(intent)
+            call.resolve()
+        } catch (t: Throwable) {
+            Log.w(TAG, "Tidak ada aplikasi galeri: ${t.message}")
+            call.reject("Tidak ada aplikasi galeri", "E_UNKNOWN")
+        }
+    }
+
+    @PluginMethod
+    fun shareResult(call: PluginCall) {
+        val uriStr = call.getString("uri")
+        if (uriStr.isNullOrBlank()) {
+            call.reject("uri kosong", "E_UNKNOWN")
+            return
+        }
+        val mime = call.getString("mime") ?: "image/jpeg"
+        try {
+            val send = Intent(Intent.ACTION_SEND).apply {
+                type = mime
+                putExtra(Intent.EXTRA_STREAM, Uri.parse(uriStr))
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            context.startActivity(Intent.createChooser(send, "Bagikan hasil"))
+            call.resolve()
+        } catch (t: Throwable) {
+            Log.w(TAG, "Bagikan gagal: ${t.message}")
+            call.reject("Tidak bisa membagikan", "E_UNKNOWN")
+        }
+    }
+
+    /** Inti job: dekode → muat model → inferensi → simpan. Semua di worker. */
+    private fun runEnhanceJob(
+        jobId: String,
+        uriStr: String,
+        modelId: String,
+        scale: Int,
+        useGpu: Boolean,
+        tileReq: Int,
+        maxOut: Int,
+        quality: Int,
+        cancelled: AtomicBoolean,
+    ) {
+        val t0 = SystemClock.elapsedRealtime()
+        var handle = 0L
+        var src: Bitmap? = null
+        var result: Bitmap? = null
+        try {
+            val ctx = context
+            ImagePipeline.pruneResults(ctx)
+            emitProgress(jobId, "decoding", 5)
+
+            val uri = Uri.parse(uriStr)
+            val inputCap = (maxOut / scale).coerceAtLeast(64)
+            src = ImagePipeline.decode(ctx, uri, inputCap)
+            if (src == null) {
+                failJob(jobId, "E_DECODE_FAILED", "Foto tidak bisa dibaca")
+                return
+            }
+            if (cancelled.get()) {
+                failJob(jobId, "E_CANCELLED", "Dibatalkan")
+                return
+            }
+            emitProgress(jobId, "decoding", 12)
+
+            val beforePath = ImagePipeline.writePreview(ctx, src, 720)
+
+            val dir = File(ctx.cacheDir, "models").apply { mkdirs() }
+            val param = File(dir, "$modelId.param")
+            val bin = File(dir, "$modelId.bin")
+            copyAsset(ctx, "models/$modelId.param", param)
+            copyAsset(ctx, "models/$modelId.bin", bin)
+
+            val threads = maxOf(1, Runtime.getRuntime().availableProcessors() / 2)
+            handle = EnhancerNative.nativeCreate(param.absolutePath, bin.absolutePath, threads, useGpu)
+            if (handle == 0L) {
+                failJob(jobId, "E_MODEL_MISSING", "Model gagal dimuat")
+                return
+            }
+            emitProgress(jobId, "enhancing", 20)
+
+            val w = src.width
+            val h = src.height
+            // Pemotongan wajib di atas 512 px: satu lintasan 1024² mematikan proses.
+            val tile = if (tileReq > 0) tileReq else if (maxOf(w, h) > 512) 256 else 0
+
+            val px = ImagePipeline.toArgb(src)
+            val outPx = EnhancerNative.nativeUpscale(handle, px, w, h, tile, 16)
+            if (outPx == null) {
+                failJob(jobId, "E_OUT_OF_MEMORY", "Kehabisan memori saat memproses")
+                return
+            }
+            Log.i(TAG, "Sumber ${w}x$h → hasil ${w * scale}x${h * scale}, tile=$tile")
+            emitProgress(jobId, "enhancing", 90)
+
+            if (cancelled.get()) {
+                failJob(jobId, "E_CANCELLED", "Dibatalkan")
+                return
+            }
+
+            result = ImagePipeline.fromArgb(outPx, w * scale, h * scale)
+            emitProgress(jobId, "encoding", 94)
+
+            val afterPath = ImagePipeline.writePreview(ctx, result, 1080)
+            emitProgress(jobId, "saving", 97)
+
+            // PRD FR-06 (revisi): hasil TIDAK langsung masuk galeri. User melihat
+            // dulu di layar Hasil, baru menekan Simpan → `saveToGallery`.
+            val file = ImagePipeline.writeResult(ctx, result, quality)
+            if (file == null) {
+                failJob(jobId, "E_SAVE_FAILED", "Gagal menyiapkan hasil")
+                return
+            }
+
+            emitProgress(jobId, "saving", 100)
+            val done = JSObject()
+                .put("jobId", jobId)
+                .put("resultPath", file.absolutePath)
+                .put("outputUri", "")
+                .put("outputWidth", result.width)
+                .put("outputHeight", result.height)
+                .put("durationMs", SystemClock.elapsedRealtime() - t0)
+                .put("usedGpu", useGpu)
+                .put("tileSizeUsed", tile)
+                .put("beforePreviewPath", beforePath)
+                .put("afterPreviewPath", afterPath)
+            Log.i(TAG, "Job selesai: ${done.toString()}")
+            notifyListeners("completed", done)
+        } catch (e: OutOfMemoryError) {
+            Log.e(TAG, "Job $jobId kehabisan memori", e)
+            failJob(jobId, "E_OUT_OF_MEMORY", "Kehabisan memori saat memproses")
+        } catch (t: Throwable) {
+            Log.e(TAG, "Job $jobId gagal", t)
+            failJob(jobId, "E_UNKNOWN", t.message ?: "Terjadi kesalahan")
+        } finally {
+            if (handle != 0L) {
+                try {
+                    EnhancerNative.nativeDestroy(handle)
+                } catch (t: Throwable) {
+                    Log.w(TAG, "Lepas model gagal: ${t.message}")
+                }
+            }
+            src?.recycle()
+            result?.recycle()
+            if (activeJobId == jobId) {
+                activeJobId = null
+                activeCancel = null
+            }
+        }
+    }
+
+    private fun emitProgress(jobId: String, stage: String, percent: Int) {
+        notifyListeners(
+            "progress",
+            JSObject().put("jobId", jobId).put("stage", stage).put("percent", percent),
+        )
+    }
+
+    private fun failJob(jobId: String, code: String, message: String) {
+        Log.w(TAG, "Job $jobId gagal: $code — $message")
+        notifyListeners(
+            "failed",
+            JSObject()
+                .put("jobId", jobId)
+                .put("code", code)
+                .put("message", message)
+                .put("recoverable", code != "E_OUT_OF_MEMORY"),
+        )
+    }
+
+    /** Model yang skala aslinya cocok; kalau tidak ada, pakai model default. */
+    private fun modelForScale(scale: Int): String? {
+        val all = try {
+            context.assets.list("models")?.filter { it.endsWith(".param") }?.sorted() ?: emptyList()
+        } catch (t: Throwable) {
+            emptyList()
+        }
+        val exact = all.firstOrNull { it.removeSuffix(".param").endsWith("-x$scale") }
+        return (exact ?: all.firstOrNull())?.removeSuffix(".param")
     }
 
     // ---------------------------------------------------------------- helpers
@@ -307,7 +791,40 @@ class EnhancerPlugin : Plugin() {
         Thread(r, "enhancer-worker").apply { isDaemon = true }
     }
 
+    /** Status job yang sedang jalan; hanya satu pada satu waktu (worker tunggal). */
+    private var activeJobId: String? = null
+    private var activeCancel: AtomicBoolean? = null
+    private val jobSeq = AtomicLong(0)
+
+    /** Mencegah dua pemilih foto terbuka bersamaan. */
+    private var pendingPick = false
+
+    /** Call yang menunggu hasil pemilih foto. */
+    private var pendingPickCall: PluginCall? = null
+
     companion object {
         private const val TAG = "Arulume/Enhancer"
+        private const val PREFS_PICK = "arulume_pick"
+        private const val KEY_PICK = "uri"
+
+        /** Request code pemilih foto; dipakai `MainActivity`. */
+        const val REQ_PICK = 0x4152
+
+        @Volatile
+        private var instance: EnhancerPlugin? = null
+
+        /** Dipanggil `MainActivity.onActivityResult` untuk meneruskan hasil pemilih. */
+        fun deliverPick(ok: Boolean, uri: Uri?) {
+            instance?.onPickResult(ok, uri)
+        }
+
+        /**
+         * Dipanggil `MainActivity.onActivityResult` saat hasil pemilih datang lewat
+         * jalur lama (proses sempat mati). Disimpan di disk, bukan memori.
+         */
+        fun rememberPick(ctx: Context, uri: Uri) {
+            ctx.getSharedPreferences(PREFS_PICK, Context.MODE_PRIVATE)
+                .edit().putString(KEY_PICK, uri.toString()).apply()
+        }
     }
 }
