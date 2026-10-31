@@ -55,7 +55,29 @@ cd android && ./gradlew --stop && ./gradlew --version | grep "Launcher JVM"
 | JDK untuk Gradle | Temurin 21.0.13 |
 | compileSdk / targetSdk / minSdk | 36 / 36 / 24 |
 | NDK / CMake | 28.2.13676358 / 3.22.1 |
+| ncnn | 20261020 (`libncnn.so` prebuilt, Vulkan) |
+| Model | `realesr-animevideov3` x2 + x4 (ncnn, BSD-3) |
 | ABI | `arm64-v8a` saja |
+
+### 1.3 Berkas biner yang ikut di repo
+
+Tiga hal ini **disimpan di git** supaya hasil clone langsung bisa di-build:
+
+| Berkas | Ukuran | Asal |
+|---|---|---|
+| `android/app/src/main/jniLibs/arm64-v8a/libncnn.so` | ±11 MB | `ncnn-20261020-android-vulkan-shared.zip` |
+| `android/app/src/main/cpp/ncnn/` (header) | ±0,5 MB | arsip yang sama |
+| `android/app/src/main/assets/models/*.{param,bin}` | ±2,4 MB | `realesrgan-ncnn-vulkan-20220424-ubuntu.zip` |
+
+Checksum model ada di `assets/models/SHA256SUMS` dan di `THIRD_PARTY.md`.
+Yang **tidak** disimpan: `android/app/src/main/assets/public/` — dibuat ulang setiap
+`npx cap sync android`. Karena itu urutan build selalu:
+
+```bash
+npm run build && npx cap sync android && cd android && ./gradlew :app:assembleDebug
+```
+
+Melewati `cap sync` menghasilkan APK tanpa UI.
 
 ## 2. Konfigurasi penting
 

@@ -154,7 +154,7 @@ Aturan perpindahan fase: fase berikutnya hanya dimulai jika Definition of Done f
 | A5 | Pemilik memiliki PC dengan Android Studio untuk build | Perlu dikonfirmasi |
 | A6 | Model compact cukup bagus untuk kebutuhan pribadi | Diuji di Fase 0 |
 | A7 | Aplikasi tetap memuat UI normal tanpa izin `INTERNET`, karena Capacitor menyajikan aset lokal di dalam proses | **Terbukti** — APK 0.0.1 jalan di Redmi Note 8 tanpa izin `INTERNET` (logcat + `aapt2`) |
-| A8 | Model `realesr-general-x4v3` (atau yang setara) tersedia atau dapat dikonversi ke format ncnn | **[VERIFIKASI]** |
+| A8 | Model `realesr-general-x4v3` (atau yang setara) tersedia atau dapat dikonversi ke format ncnn | **Terbukti** — dipakai `realesr-animevideov3` x2/x4 resmi (BSD-3); lihat `benchmark-fase0.md` §5 |
 
 ### 6.2 Batasan teknis
 

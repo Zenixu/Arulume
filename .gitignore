@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Aset web hasil `npx cap sync` (dibuat ulang dari `out/`)
+android/app/src/main/assets/public/

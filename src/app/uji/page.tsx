@@ -3,16 +3,25 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { IconArrowLeft, IconCheck } from "@/components/icons";
-import { Enhancer, isNative, type DeviceCapabilities } from "@/plugins/enhancer";
+import {
+  Enhancer,
+  isNative,
+  type DeviceCapabilities,
+  type SelfTestResult,
+} from "@/plugins/enhancer";
 
 /**
- * Halaman uji Fase 0 (TASKS.md 0.3): menampilkan hasil getCapabilities().
+ * Halaman uji Fase 0 (TASKS.md 0.3 & 0.5): menampilkan hasil getCapabilities()
+ * dan menjalankan uji mesin native (ncnn + Vulkan) pada citra sintetis.
  * Bukan layar produk — dipakai untuk membuktikan plugin native bekerja.
  */
 export default function HalamanUji() {
   const [cap, setCap] = useState<DeviceCapabilities | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState<null | "gpu" | "cpu">(null);
+  const [tests, setTests] = useState<SelfTestResult[]>([]);
+  const [testError, setTestError] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -39,6 +48,27 @@ export default function HalamanUji() {
       alive = false;
     };
   }, []);
+
+  async function jalankan(vulkan: boolean) {
+    setBusy(vulkan ? "gpu" : "cpu");
+    setTestError(null);
+    setTests([]);
+    const hasil: SelfTestResult[] = [];
+    try {
+      for (const size of [256, 512, 1024]) {
+        // Ukuran besar wajib dipotong: satu lintasan 1024² menghabiskan memori
+        // di perangkat 3,5 GB (aplikasi pernah dimatikan sistem).
+        const r = await Enhancer.runSelfTest({ vulkan, size, tile: size > 512 ? 256 : 0 });
+        hasil.push(r);
+        setTests([...hasil]);
+      }
+    } catch (e) {
+      const err = e as { code?: string; message?: string };
+      setTestError(`${err.code ?? "E_UNKNOWN"}: ${err.message ?? "gagal"}`);
+    } finally {
+      setBusy(null);
+    }
+  }
 
   const rows: Array<[string, string]> = cap
     ? [
@@ -104,6 +134,64 @@ export default function HalamanUji() {
         <p className="text-caption text-text-2">
           Data ini dipakai untuk mengisi tabel perangkat di Docs/benchmark-fase0.md.
         </p>
+
+        {cap ? (
+          <div className="mt-2 rounded-md border border-border bg-surface p-4">
+            <p className="text-body text-text">Uji mesin</p>
+            <p className="mt-1 text-caption text-text-2">
+              Memperbesar citra uji 256×256 di dalam aplikasi, tanpa internet.
+            </p>
+            <div className="mt-3 flex gap-2">
+              <button
+                type="button"
+                disabled={busy !== null}
+                onClick={() => void jalankan(true)}
+                className="rounded-full bg-accent px-4 py-2.5 text-body font-semibold text-on-accent disabled:opacity-60"
+              >
+                {busy === "gpu" ? "Menguji…" : "Uji GPU"}
+              </button>
+              <button
+                type="button"
+                disabled={busy !== null}
+                onClick={() => void jalankan(false)}
+                className="rounded-full border border-border bg-surface-2 px-4 py-2.5 text-body font-semibold text-text disabled:opacity-60"
+              >
+                {busy === "cpu" ? "Menguji…" : "Uji CPU"}
+              </button>
+            </div>
+
+            {testError ? (
+              <p className="mt-3 text-caption text-danger">{testError}</p>
+            ) : null}
+
+            {tests.length ? (
+              <table className="mt-3 w-full border-collapse">
+                <thead>
+                  <tr className="text-left">
+                    <th className="text-caption font-normal text-text-2">Masuk</th>
+                    <th className="text-caption font-normal text-text-2">Keluaran</th>
+                    <th className="text-caption font-normal text-text-2">Muat</th>
+                    <th className="text-caption font-normal text-text-2">Proses</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tests.map((t) => (
+                    <tr key={t.inputSize} className="border-t border-border">
+                      <td className="py-1.5 text-caption text-text">
+                        {t.inputSize}²
+                      </td>
+                      <td className="py-1.5 text-caption text-text">
+                        {t.inputSize * (t.expectedWidth / t.inputSize)}²
+                      </td>
+                      <td className="py-1.5 text-caption text-text">{t.loadMs} ms</td>
+                      <td className="py-1.5 text-caption text-text">{t.inferMs} ms</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : null}
+          </div>
+        ) : null}
       </section>
     </main>
   );

@@ -9,6 +9,15 @@ Kategori: **Added** (baru) · **Changed** (diubah) · **Fixed** (diperbaiki) · 
 ## [Unreleased]
 
 ### Added
+- **Mesin inferensi native (Fase 0.5):** ncnn `20261020` (`libncnn.so` + header, Vulkan opsional) di
+  `jniLibs/arm64-v8a/` dan `cpp/ncnn/`; `enhancer_jni.cpp` (JNI `nativeCreate`/`nativeUpscale`/
+  `nativeInfo`/`nativeDestroy`, tile + padding), `EnhancerNative.kt`, CMake di `app/build.gradle`
+  (`ndkVersion 28.2.13676358`, CMake 3.22.1).
+- Model resmi `realesr-animevideov3-x2` dan `-x4` (BSD-3) di `assets/models/`, checksum tercatat
+  di `THIRD_PARTY.md`.
+- `runSelfTest()` di `EnhancerPlugin` (berjalan di `enhancer-worker`, tidak memblokir UI) +
+  tombol **Uji GPU** / **Uji CPU** di `/uji` yang menyapu ukuran 256², 512², 1024².
+- Hasil benchmark nyata di `benchmark-fase0.md` §5 + tangkapan layar `assets/screenshots/fase0-uji-mesin.png`.
 - **Scaffold Fase 0 (`0.0.1`):** Next.js 16 (App Router, static export) + React 19 + Tailwind v4,
   Capacitor 8.6 (`android/`, `id.aruthtale.arulume`), plugin Kotlin `EnhancerPlugin` dengan
   `getCapabilities()` (ABI, API, RAM, core CPU, Vulkan, nama GPU via EGL) + `clearCache()`.

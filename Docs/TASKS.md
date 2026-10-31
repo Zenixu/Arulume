@@ -29,17 +29,17 @@ Tujuan: membuktikan jalur teknis dan mengukur performa di HP sendiri.
 - [x] Tampilkan hasil di halaman uji — `/uji` menampilkan ABI `arm64-v8a`, API 30, RAM 3633 MB, 8 core, Vulkan tersedia, GPU `Adreno (TM) 610`
 
 ### 0.4 Native
-- [ ] Unduh ncnn prebuilt Android Vulkan, taruh di `cpp/ncnn/`
-- [ ] `CMakeLists.txt` + `native-lib.cpp`, `abiFilters "arm64-v8a"`
-- [ ] JNI: fungsi `enhance(...)` dipanggil dari Kotlin
-- [ ] Deteksi Vulkan + nama GPU dikirim ke `getCapabilities()`
+- [x] Unduh ncnn prebuilt Android Vulkan, taruh di `cpp/ncnn/` — rilis `20261020`, `libncnn.so` di `jniLibs/arm64-v8a/`, header di `cpp/ncnn/`
+- [x] `CMakeLists.txt` + `enhancer_jni.cpp`, `abiFilters "arm64-v8a"`
+- [x] JNI: fungsi `enhance(...)` dipanggil dari Kotlin — `EnhancerNative.nativeCreate/nativeUpscale/nativeInfo/nativeDestroy`
+- [x] Deteksi Vulkan + nama GPU dikirim ke `getCapabilities()` — sudah sejak 0.3, kini ditambah `native` di hasil uji
 
 ### 0.5 Model dan inferensi
-- [ ] **[VERIFIKASI A8]** Dapatkan model Real-ESRGAN compact dalam format ncnn (atau konversi)
-- [ ] Taruh di `assets/models/`, catat checksum SHA-256
-- [ ] Proses **satu foto** end-to-end (GPU) tanpa tiling
-- [ ] Tambah tiling + padding, cek tidak ada garis sambungan
-- [ ] Fallback CPU berfungsi
+- [x] **[VERIFIKASI A8]** Dapatkan model Real-ESRGAN compact dalam format ncnn — `realesr-animevideov3` x2 + x4 dari rilis resmi `realesrgan-ncnn-vulkan-20220424` (BSD-3)
+- [x] Taruh di `assets/models/`, catat checksum SHA-256 — lihat `Docs/THIRD_PARTY.md`
+- [x] Proses **satu citra** end-to-end (GPU) tanpa tiling — 256² dan 512² berhasil; 1024² tanpa tile **mematikan proses** (memori)
+- [x] Tambah tiling + padding, cek tidak ada garis sambungan — `tile = 256`, `pad = 16`; 1024² selesai (belum dinilai visual, §9 kosong)
+- [x] Fallback CPU berfungsi — CPU justru **lebih cepat** dari Vulkan di Adreno 610 (lihat `benchmark-fase0.md` §5)
 
 ### 0.6 Simpan hasil
 - [ ] Simpan JPEG ke `Pictures/Arulume` lewat MediaStore (`IS_PENDING`)
@@ -48,7 +48,7 @@ Tujuan: membuktikan jalur teknis dan mengukur performa di HP sendiri.
 ### 0.7 Verifikasi asumsi
 - [x] **[VERIFIKASI A7]** Hapus izin `INTERNET`; UI tetap termuat dan berfungsi — terbukti di Redmi Note 8
 - [x] `aapt dump permissions` pada APK tidak memuat `INTERNET` — hanya `WRITE_EXTERNAL_STORAGE (maxSdkVersion=28)`
-- [ ] Cek model dapat dimuat dari assets atau perlu disalin ke `filesDir`
+- [x] Cek model dapat dimuat dari assets atau perlu disalin ke `filesDir` — **perlu disalin**: ncnn butuh jalur berkas nyata, jadi `EnhancerPlugin` menyalin ke `cacheDir/models` sekali (131–266 ms)
 
 ### 0.8 Benchmark
 - [ ] Jalankan protokol di `benchmark-fase0.md` (GPU/CPU × tile × skala)

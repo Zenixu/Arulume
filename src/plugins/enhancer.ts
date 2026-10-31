@@ -103,8 +103,31 @@ export interface FailedEvent {
   recoverable: boolean;
 }
 
+export interface SelfTestResult {
+  ok: boolean;
+  modelId: string;
+  engine: string;
+  inputSize: number;
+  outputPixels: number;
+  expectedWidth: number;
+  loadMs: number;
+  inferMs: number;
+  tile: number;
+  threads: number;
+  vulkan: boolean;
+  native: string;
+  sample: number[];
+}
+
 export interface EnhancerPlugin {
   getCapabilities(): Promise<DeviceCapabilities>;
+  runSelfTest(opts?: {
+    modelId?: string;
+    size?: number;
+    vulkan?: boolean;
+    tile?: number;
+    threads?: number;
+  }): Promise<SelfTestResult>;
   pickMedia(opts: {
     type: "image" | "video";
     multiple?: boolean;

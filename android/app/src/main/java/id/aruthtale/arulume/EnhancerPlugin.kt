@@ -7,6 +7,7 @@ import android.opengl.EGL14
 import android.opengl.EGLConfig
 import android.opengl.GLES20
 import android.os.Build
+import android.os.SystemClock
 import android.util.Log
 import com.getcapacitor.JSArray
 import com.getcapacitor.JSObject
@@ -15,6 +16,7 @@ import com.getcapacitor.PluginCall
 import com.getcapacitor.PluginMethod
 import com.getcapacitor.annotation.CapacitorPlugin
 import java.io.File
+import java.util.concurrent.Executors
 
 /**
  * Plugin `Enhancer` — Docs/PRD.md bagian 10, Docs/ARCHITECTURE.md bagian 6.
@@ -56,6 +58,93 @@ class EnhancerPlugin : Plugin() {
             return
         }
         call.resolve(JSObject().put("freedBytes", freed))
+    }
+
+    /**
+     * Uji mandiri Fase 0.5: memuat model sungguhan, memperbesar citra sintetis
+     * 256x256, dan mengembalikan waktu + dimensi hasil.
+     *
+     * Berjalan di `enhancer-worker` (Docs/AGENTS.md #3); thread UI tidak pernah
+     * menunggu. Tidak menyentuh berkas pengguna (Docs/AGENTS.md #4).
+     */
+    @PluginMethod
+    fun runSelfTest(call: PluginCall) {
+        val modelId = call.getString("modelId") ?: defaultModelId()
+        val size = (call.getInt("size") ?: 256).coerceIn(32, 1024)
+        val useVulkan = call.getBoolean("vulkan") ?: true
+        val tile = call.getInt("tile") ?: 0
+        val threads = call.getInt("threads")
+            ?: maxOf(1, Runtime.getRuntime().availableProcessors() / 2)
+
+        if (modelId == null) {
+            call.reject("Belum ada model di assets/models/", "E_MODEL_MISSING")
+            return
+        }
+
+        worker.execute {
+            var handle = 0L
+            try {
+                val ctx = context
+                val dir = File(ctx.cacheDir, "models").apply { mkdirs() }
+                val param = File(dir, "$modelId.param")
+                val bin = File(dir, "$modelId.bin")
+                copyAsset(ctx, "models/$modelId.param", param)
+                copyAsset(ctx, "models/$modelId.bin", bin)
+
+                val tLoad = SystemClock.elapsedRealtime()
+                handle = EnhancerNative.nativeCreate(
+                    param.absolutePath, bin.absolutePath, threads, useVulkan
+                )
+                val loadMs = SystemClock.elapsedRealtime() - tLoad
+                if (handle == 0L) {
+                    call.reject("Model gagal dimuat (lihat logcat ArulumeNative)", "E_MODEL")
+                    return@execute
+                }
+
+                val px = syntheticImage(size)
+                val tRun = SystemClock.elapsedRealtime()
+                val out = EnhancerNative.nativeUpscale(handle, px, size, size, tile, 16)
+                val inferMs = SystemClock.elapsedRealtime() - tRun
+                if (out == null) {
+                    call.reject("Inferensi gagal", "E_INFER")
+                    return@execute
+                }
+
+                val outW = size * (if (modelId.endsWith("-x2")) 2 else if (modelId.endsWith("-x3")) 3 else 4)
+                val sample = JSArray()
+                for (i in intArrayOf(0, out.size / 2, out.size - 1)) {
+                    sample.put(out[i])
+                }
+
+                val ret = JSObject()
+                    .put("ok", true)
+                    .put("modelId", modelId)
+                    .put("engine", "ncnn")
+                    .put("inputSize", size)
+                    .put("outputPixels", out.size)
+                    .put("expectedWidth", outW)
+                    .put("loadMs", loadMs)
+                    .put("inferMs", inferMs)
+                    .put("tile", tile)
+                    .put("threads", threads)
+                    .put("vulkan", useVulkan)
+                    .put("native", EnhancerNative.nativeInfo(handle))
+                    .put("sample", sample)
+                Log.i(TAG, "Uji mandiri: ${ret.toString()}")
+                call.resolve(ret)
+            } catch (t: Throwable) {
+                Log.e(TAG, "Uji mandiri gagal", t)
+                call.reject("Uji mandiri gagal: ${t.message}", "E_UNKNOWN")
+            } finally {
+                if (handle != 0L) {
+                    try {
+                        EnhancerNative.nativeDestroy(handle)
+                    } catch (t: Throwable) {
+                        Log.w(TAG, "Lepas model gagal: ${t.message}")
+                    }
+                }
+            }
+        }
     }
 
     // ---------------------------------------------------------------- helpers
@@ -155,11 +244,16 @@ class EnhancerPlugin : Plugin() {
                 0L
             }
             val scales = JSArray().put(2).put(3).put(4)
+            val nativeScale = when {
+                id.endsWith("-x2") -> 2
+                id.endsWith("-x3") -> 3
+                else -> 4
+            }
             out.put(
                 JSObject()
                     .put("id", id)
                     .put("label", id)
-                    .put("nativeScale", 4)
+                    .put("nativeScale", nativeScale)
                     .put("supportedScales", scales)
                     .put("kind", "image")
                     .put("license", "lihat Docs/THIRD_PARTY.md")
@@ -172,6 +266,46 @@ class EnhancerPlugin : Plugin() {
     private fun dirSize(dir: File): Long =
         if (!dir.exists()) 0L
         else dir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
+
+    /** Model pertama (urut abjad) di `assets/models/`. */
+    private fun defaultModelId(): String? = try {
+        context.assets.list("models")
+            ?.filter { it.endsWith(".param") }
+            ?.sorted()
+            ?.firstOrNull()
+            ?.removeSuffix(".param")
+    } catch (t: Throwable) {
+        Log.w(TAG, "Baca folder models gagal: ${t.message}")
+        null
+    }
+
+    /** Menyalin model dari assets ke cache sekali saja (ncnn butuh path berkas nyata). */
+    private fun copyAsset(ctx: Context, asset: String, target: File) {
+        if (target.exists() && target.length() > 0L) return
+        ctx.assets.open(asset).use { input ->
+            target.outputStream().use { output -> input.copyTo(output, 64 * 1024) }
+        }
+    }
+
+    /** Citra uji deterministik: gradien + kotak-kotak, supaya hasil bisa dibandingkan. */
+    private fun syntheticImage(size: Int): IntArray {
+        val px = IntArray(size * size)
+        val denom = (size - 1).coerceAtLeast(1)
+        for (y in 0 until size) {
+            for (x in 0 until size) {
+                val r = (x * 255) / denom
+                val g = (y * 255) / denom
+                val b = if (((x / 16) + (y / 16)) % 2 == 0) 255 else 200
+                px[y * size + x] = (0xff shl 24) or (r shl 16) or (g shl 8) or b
+            }
+        }
+        return px
+    }
+
+    /** Satu thread khusus untuk kerja berat (Docs/AGENTS.md #3). */
+    private val worker = Executors.newSingleThreadExecutor { r ->
+        Thread(r, "enhancer-worker").apply { isDaemon = true }
+    }
 
     companion object {
         private const val TAG = "Arulume/Enhancer"

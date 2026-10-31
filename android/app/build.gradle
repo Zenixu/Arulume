@@ -4,6 +4,7 @@ apply plugin: 'org.jetbrains.kotlin.android'
 android {
     namespace = "id.aruthtale.arulume"
     compileSdk = rootProject.ext.compileSdkVersion
+    ndkVersion "28.2.13676358"
     defaultConfig {
         applicationId "id.aruthtale.arulume"
         minSdkVersion rootProject.ext.minSdkVersion
@@ -20,6 +21,20 @@ android {
         // Hanya arm64-v8a (Docs/ARCHITECTURE.md bagian 11) — memperkecil APK.
         ndk {
             abiFilters "arm64-v8a"
+        }
+
+        // ncnn + JNI (Docs/ARCHITECTURE.md bagian 6, Fase 0.4).
+        externalNativeBuild {
+            cmake {
+                arguments "-DANDROID_STL=c++_shared"
+                cppFlags "-O3 -fno-finite-math-only"
+            }
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path "src/main/cpp/CMakeLists.txt"
+            version "3.22.1"
         }
     }
     buildTypes {
