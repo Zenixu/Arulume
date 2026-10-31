@@ -48,10 +48,32 @@ Aturan batas antar lapisan:
 |---|---|---|
 | UI/WebView | Render React, input pengguna | Tidak pernah memblokir; tidak ada komputasi berat |
 | Capacitor plugin thread | Menerima panggilan `@PluginMethod` | Hanya validasi dan memulai job, kembali segera |
-| `enhancer-worker` (single thread executor) | Menjalankan satu job penuh (decode → inferensi → encode → simpan) | Satu job aktif sekaligus |
+| `enhancer-worker` (single thread executor, di dalam `EnhancerService`) | Menjalankan satu job penuh (decode → inferensi → encode → simpan) | Satu job aktif sekaligus |
+| Main thread layanan | `startForeground` + memperbarui notifikasi progres | Tidak menyentuh bitmap/inferensi |
 | Thread internal ncnn | Paralelisme CPU / antrian Vulkan | Jumlah thread CPU dibatasi (mis. jumlah core besar) agar HP tidak terlalu panas |
 
 Pengiriman event ke UI memakai `notifyListeners` dan dibatasi frekuensinya (maks ±10 event per detik).
+
+### 2.1 Kelangsungan proses (FR-12/FR-13)
+
+```
+WebView ──startEnhanceImage()──▶ EnhancerPlugin ──(resolve jobId segera)
+                                        │
+                                        ▼
+                          EnhancerService.startForegroundService(intent berisi parameter job)
+                                        │  startForeground(< 5 dtk) + PARTIAL_WAKE_LOCK
+                                        ▼
+                          JobRunner (executor `enhancer-worker`)
+                            ├─ decode → nativeUpscale(tile, ProgressBridge) → encode
+                            ├─ ProsesNotif.perbarui() tiap ±3%  (kanal arulume.proses, ongoing)
+                            └─ selesai/gagal → ProsesNotif.selesai() → stopSelf()
+```
+
+- `JobRunner` adalah `object` (bukan anggota plugin) supaya pekerjaan tidak bergantung pada umur WebView/Activity.
+- Event dikirim lewat daftar pendengar; plugin mendaftar saat `load()` dan melepas saat `handleOnDestroy()`. Kalau WebView sudah hilang, event hanya tidak terkirim — job tetap selesai dan tercatat di Riwayat.
+- `getJobStatus()` memberi tahu layar Editor bahwa job masih hidup (atau sudah selesai) setelah layar dibuka ulang.
+- Progres dari C++: `ProgressBridge` memanggil `EnhancerNative.TileProgress.onTile(done, total)` per tile; pemetaan 15–88% untuk fase inferensi, sisanya decode/encode/simpan.
+- Pembatalan tetap memakai `AtomicBoolean` yang diperiksa di antara tile; notifikasi ditutup saat batal.
 
 ## 3. Siklus hidup job
 

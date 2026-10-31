@@ -15,6 +15,7 @@ import { Mascot, MASCOT_ROLE } from "@/components/mascot";
 import { IconArrowLeft } from "@/components/icons";
 import { Enhancer, isNative } from "@/plugins/enhancer";
 import { pesanError, useJobStore } from "@/lib/job-store";
+import { bacaSkalaBawaan } from "@/lib/settings";
 
 const STAGE_LABEL: Record<string, string> = {
   decoding: "Membaca foto",
@@ -32,6 +33,12 @@ export default function Editor() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [skala, setSkala] = useState<2 | 4>(2);
+
+  // Skala bawaan dari Pengaturan (PRD FR-09); dibaca setelah mount supaya
+  // ekspor statis tidak menyentuh localStorage di server.
+  useEffect(() => {
+    setSkala(bacaSkalaBawaan());
+  }, []);
 
   const jobIdRef = useRef<string | null>(null);
   const handles = useRef<PluginListenerHandle[]>([]);
@@ -59,14 +66,8 @@ export default function Editor() {
     };
   }, [lepasListener]);
 
-  async function proses() {
-    if (!photo || busy) return;
-    setError(null);
-    setBusy(true);
-    setPercent(0);
-    setStage("decoding");
-
-    // Listener dipasang SEBELUM job dimulai supaya tidak ada event yang terlewat.
+  /** Memasang tiga listener job. Dipakai saat memulai dan saat memulihkan. */
+  const pasangListener = useCallback(async () => {
     handles.current = [
       await Enhancer.addListener("progress", (e) => {
         setPercent(e.percent);
@@ -86,6 +87,56 @@ export default function Editor() {
         setError(pesanError(e.code));
       }),
     ];
+  }, [lepasListener, router, setFailure, setResult]);
+
+  /**
+   * Pemulihan: proses berjalan di layanan latar, jadi layar ini bisa dibuka
+   * ulang saat job masih hidup (atau sudah selesai) tanpa kehilangan progres.
+   */
+  useEffect(() => {
+    if (!photo || !isNative()) return;
+    let dibatalkan = false;
+    (async () => {
+      try {
+        const s = await Enhancer.getJobStatus();
+        if (dibatalkan || !s.jobId) return;
+        if (s.aktif) {
+          jobIdRef.current = s.jobId;
+          setBusy(true);
+          setStage(s.stage ?? "decoding");
+          setPercent(s.percent ?? 0);
+          await pasangListener();
+        } else if (s.stage === "done") {
+          router.replace(`/riwayat/lihat?id=${encodeURIComponent(s.jobId)}`);
+        }
+      } catch {
+        /* tidak ada job sebelumnya */
+      }
+    })();
+    return () => {
+      dibatalkan = true;
+    };
+  }, [photo, pasangListener, router]);
+
+  async function proses() {
+    if (!photo || busy) return;
+    setError(null);
+    setBusy(true);
+    setPercent(0);
+    setStage("decoding");
+
+    // Listener dipasang SEBELUM job dimulai supaya tidak ada event yang terlewat.
+    await pasangListener();
+
+    // Notifikasi progres butuh izin di Android 13+. Ditolak pun proses tetap
+    // jalan; hanya bar di notifikasi yang tidak muncul.
+    if (isNative()) {
+      try {
+        await Enhancer.mintaIzinNotifikasi();
+      } catch {
+        /* izin opsional */
+      }
+    }
 
     try {
       const { jobId } = await Enhancer.startEnhanceImage({

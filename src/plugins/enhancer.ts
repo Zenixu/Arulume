@@ -131,6 +131,35 @@ export interface SelfTestResult {
   sample: number[];
 }
 
+/**
+ * Satu baris Riwayat (PRD FR-08). Disimpan native di `filesDir/riwayat.json`.
+ * `hasResult` false = berkas cache sudah dipangkas; arahkan user ke galeri.
+ */
+export interface HistoryEntry {
+  id: string;
+  createdAt: number;
+  model: string;
+  scale: number;
+  srcWidth: number;
+  srcHeight: number;
+  outWidth: number;
+  outHeight: number;
+  durationMs: number;
+  resultPath: string;
+  beforePreviewPath: string;
+  afterPreviewPath: string;
+  savedUri: string;
+  savedName: string;
+  hasResult: boolean;
+}
+
+export interface JobStatus {
+  jobId?: string;
+  stage?: JobStage | "done" | "failed" | "idle";
+  percent?: number;
+  aktif: boolean;
+}
+
 export interface EnhancerPlugin {
   getCapabilities(): Promise<DeviceCapabilities>;
   runSelfTest(opts?: {
@@ -153,6 +182,18 @@ export interface EnhancerPlugin {
   /** Menyalin hasil dari cache ke galeri `Pictures/Arulume`. */
   saveToGallery(opts: { path: string; quality?: number }): Promise<SavedResult>;
   cancelJob(opts: { jobId: string }): Promise<void>;
+  /**
+   * Keadaan job terakhir yang diketahui native. Dipakai saat layar Editor
+   * dibuka ulang (mis. aplikasi ditutup saat proses berjalan): `aktif` true
+   * berarti proses masih hidup di layanan latar.
+   */
+  getJobStatus(): Promise<JobStatus>;
+  /** Meminta izin notifikasi (Android 13+). Notifikasi lokal, bukan FCM. */
+  mintaIzinNotifikasi(): Promise<{ granted: boolean }>;
+  listHistory(): Promise<{ items: HistoryEntry[] }>;
+  getHistory(opts: { id: string }): Promise<HistoryEntry>;
+  deleteHistory(opts: { id: string }): Promise<{ deleted: boolean }>;
+  clearHistory(): Promise<void>;
   clearCache(): Promise<{ freedBytes: number }>;
   openInGallery(opts: { uri: string }): Promise<void>;
   shareResult(opts: { uri: string; mime: string }): Promise<void>;

@@ -6,7 +6,7 @@ Aplikasi Android untuk memperjelas dan memperbesar foto (video menyusul), berjal
 
 | | |
 |---|---|
-| Status | Fase 0 (spike teknis) berjalan — scaffold Next 16 + Capacitor 8 + plugin `Enhancer` selesai, APK debug menyusul |
+| Status | Fase 1 (MVP foto) berjalan — alur pilih foto → 2×/4× → pratinjau geser & zoom → simpan manual sudah terpasang di perangkat |
 | Platform | Android 7.0+ (API 24), arm64 |
 | Distribusi | Sideload APK, penggunaan pribadi (bukan Play Store) |
 | ID aplikasi | `id.aruthtale.arulume` |
@@ -114,6 +114,7 @@ arulume/
 | `design.md` | Desain, token, maskot, komponen, layar, prompt Stitch |
 | `ARCHITECTURE.md` | Arsitektur teknis, alur job, memori, threading |
 | `TASKS.md` | Daftar tugas bercentang per fase |
+| `fase_done.md` | Arsip fase yang sudah selesai + bukti uji per perangkat |
 | `BUILD.md` | Build, penandatanganan, instalasi, update, verifikasi |
 | `THIRD_PARTY.md` | Komponen dan model pihak ketiga beserta lisensi |
 | `benchmark-fase0.md` | Template catatan benchmark Fase 0 |

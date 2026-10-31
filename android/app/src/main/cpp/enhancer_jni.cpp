@@ -56,6 +56,22 @@ void argb_to_mat(ncnn::Mat& dst, const int* src, int w, int h, int stride) {
     }
 }
 
+// Jembatan ke Kotlin untuk melaporkan progres per tile. Objeknya boleh null
+// (mis. saat uji mandiri) — dalam hal itu tidak ada yang dilaporkan.
+struct ProgressBridge {
+    JNIEnv* env = nullptr;
+    jobject obj = nullptr;
+    jmethodID onTile = nullptr;
+
+    bool valid() const { return env && obj && onTile; }
+
+    void report(int done, int total) {
+        if (!valid()) return;
+        env->CallVoidMethod(obj, onTile, static_cast<jint>(done), static_cast<jint>(total));
+        if (env->ExceptionCheck()) env->ExceptionClear();
+    }
+};
+
 inline int clamp_byte(float v) {
     int i = static_cast<int>(v * 255.f + 0.5f);
     if (i < 0) return 0;
@@ -150,9 +166,20 @@ Java_id_aruthtale_arulume_EnhancerNative_nativeCreate(JNIEnv* env, jobject /*thi
 JNIEXPORT jintArray JNICALL
 Java_id_aruthtale_arulume_EnhancerNative_nativeUpscale(JNIEnv* env, jobject /*thiz*/,
                                                        jlong handle, jintArray pixels, jint w,
-                                                       jint h, jint tile, jint pad) {
+                                                       jint h, jint tile, jint pad,
+                                                       jobject progress) {
     auto* e = reinterpret_cast<Enhancer*>(handle);
     if (!e || w <= 0 || h <= 0) return nullptr;
+
+    ProgressBridge pb;
+    if (progress != nullptr) {
+        pb.env = env;
+        pb.obj = progress;
+        jclass cls = env->GetObjectClass(progress);
+        pb.onTile = env->GetMethodID(cls, "onTile", "(II)V");
+        if (env->ExceptionCheck()) env->ExceptionClear();
+        env->DeleteLocalRef(cls);
+    }
 
     const int s = e->scale;
     const int ow = w * s;
@@ -170,6 +197,7 @@ Java_id_aruthtale_arulume_EnhancerNative_nativeUpscale(JNIEnv* env, jobject /*th
             LOGE("inferensi gagal (satu lintasan %dx%d)", w, h);
             return nullptr;
         }
+        pb.report(1, 1);
         for (int y = 0; y < oh && y < out.h; y++) {
             const float* r = out.channel(0).row(y);
             const float* g = out.channel(1).row(y);
@@ -181,6 +209,10 @@ Java_id_aruthtale_arulume_EnhancerNative_nativeUpscale(JNIEnv* env, jobject /*th
             }
         }
     } else {
+        const int cols = (w + tile - 1) / tile;
+        const int rows = (h + tile - 1) / tile;
+        const int total = cols * rows;
+        int selesai = 0;
         for (int ty = 0; ty < h; ty += tile) {
             for (int tx = 0; tx < w; tx += tile) {
                 const int tw = std::min(tile, w - tx);
@@ -215,6 +247,7 @@ Java_id_aruthtale_arulume_EnhancerNative_nativeUpscale(JNIEnv* env, jobject /*th
                                  (clamp_byte(g[sx]) << 8) | clamp_byte(b[sx]);
                     }
                 }
+                pb.report(++selesai, total);
             }
         }
     }

@@ -45,6 +45,15 @@
 
         </activity>
 
+        <!--
+          Layanan latar untuk proses perbesar foto: pekerjaan tetap jalan saat
+          aplikasi ditinggal / layar mati. Tanpa jaringan, tanpa Firebase.
+        -->
+        <service
+            android:name=".EnhancerService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -61,9 +70,15 @@
       - INTERNET: DIHAPUS (offline total).
       - READ_MEDIA_IMAGES / READ_EXTERNAL_STORAGE: tidak dipakai (Photo Picker/SAF).
       - WRITE_EXTERNAL_STORAGE: hanya untuk Android 9 ke bawah (simpan ke galeri).
-      - Fase 2: FOREGROUND_SERVICE, WAKE_LOCK, POST_NOTIFICATIONS.
+      - FOREGROUND_SERVICE (+ DATA_SYNC di Android 14+), WAKE_LOCK,
+        POST_NOTIFICATIONS: hanya untuk layanan proses latar + notifikasi
+        progres lokal. Tidak satu pun membuka akses jaringan.
     -->
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 </manifest>

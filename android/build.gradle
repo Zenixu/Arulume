@@ -7,7 +7,8 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:8.13.0'
-        classpath 'com.google.gms:google-services:4.4.4'
+        // Tanpa classpath com.google.gms:google-services — Arulume tidak memakai FCM
+        // (butuh INTERNET, dilarang Docs/AGENTS.md aturan 1). Notifikasi dibuat lokal.
         // Plugin Kotlin — dipakai MainActivity.kt dan EnhancerPlugin.kt
         classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:2.2.20'
     }

@@ -341,8 +341,19 @@ Detail pipeline ada di bagian 11.1. Persyaratan:
 - Satu kegagalan tidak menghentikan batch; ringkasan akhir menampilkan sukses/gagal per file.
 - Batal menghentikan seluruh antrian.
 
-#### FR-12 Notifikasi penyelesaian (P2)
-- Jika aplikasi di latar belakang saat selesai, tampilkan notifikasi lokal (butuh `POST_NOTIFICATIONS` di Android 13+, diminta secara kontekstual).
+#### FR-12 Notifikasi progres & penyelesaian (P1, selesai)
+- Selama job berjalan tampil notifikasi **ongoing** dengan bar progres (`setProgress`) di kanal `arulume.proses`, diperbarui tiap ±3% atau tiap satu bagian tile.
+- Saat selesai/gagal/batal, notifikasi progres ditutup dan diganti satu notifikasi di kanal `arulume.hasil` (ketuk → buka aplikasi).
+- Izin `POST_NOTIFICATIONS` (Android 13+) diminta sekali saat user menekan Proses; ditolak pun proses tetap berjalan.
+- **Bukan** Firebase/FCM: notifikasi dibuat lokal dengan `NotificationCompat` (lihat `AGENTS.md` aturan 1).
+- Pekerjaan berat berjalan di **foreground service** (`EnhancerService`, tipe `dataSync`) + `PARTIAL_WAKE_LOCK`, jadi tetap berjalan saat aplikasi ditinggal, layar mati, atau proses Activity dimatikan sistem (FR-13).
+
+#### FR-13 Proses tetap berjalan di latar (P0, selesai)
+- Menekan Home, mengunci layar, atau berpindah aplikasi **tidak** menghentikan job; job selesai dengan hasil utuh.
+- Job berjalan di `EnhancerService` (foreground, `dataSync`) sehingga prioritas proses tetap tinggi dan tidak dibekukan Doze/MIUI.
+- Saat layar kembali dibuka, layar Editor membaca `getJobStatus()`: bila job masih hidup, bar progres disambung; bila sudah selesai, user diarahkan ke hasil.
+- Hasil tetap tercatat di Riwayat walau WebView sudah tidak ada.
+- Batas: satu job aktif; `PARTIAL_WAKE_LOCK` dilepas otomatis saat job berakhir atau setelah 30 menit.
 
 ### 8.2 Fase 2: Video
 
@@ -539,6 +550,10 @@ export interface EnhancerPlugin {
   pickMedia(opts: { type: 'image' | 'video'; multiple?: boolean }): Promise<{ items: PickedMedia[] }>;
   startEnhanceImage(opts: EnhanceImageOptions): Promise<{ jobId: string }>;
   cancelJob(opts: { jobId: string }): Promise<void>;
+  /** Keadaan job terakhir yang diketahui native (dipakai saat layar dibuka ulang). */
+  getJobStatus(): Promise<JobStatus>;
+  /** Meminta izin POST_NOTIFICATIONS (Android 13+); notifikasi lokal, bukan FCM. */
+  mintaIzinNotifikasi(): Promise<{ granted: boolean }>;
   clearCache(): Promise<{ freedBytes: number }>;
   openInGallery(opts: { uri: string }): Promise<void>;
   shareResult(opts: { uri: string; mime: string }): Promise<void>;
@@ -549,6 +564,9 @@ export interface EnhancerPlugin {
 
 export const Enhancer = registerPlugin<EnhancerPlugin>('Enhancer');
 ```
+
+`JobStatus` = `{ jobId?: string; stage?: 'decoding' | 'enhancing' | 'encoding' | 'saving' | 'done' | 'failed'; percent?: number; aktif: boolean }`.
+Nilai `stage` pada `ProgressEvent` dan `JobStatus` memakai nama yang sama.
 
 Fase 2 menambahkan `startEnhanceVideo`, `pauseJob`, `resumeJob`, dengan event progres yang membawa `frameIndex` dan `frameTotal`.
 
@@ -697,9 +715,9 @@ Struktur entri riwayat:
 | `INTERNET` | **Dihapus** | Menjamin offline dan privasi (verifikasi A7) |
 | `READ_MEDIA_IMAGES` / `READ_EXTERNAL_STORAGE` | Tidak | Memakai Photo Picker/SAF |
 | `WRITE_EXTERNAL_STORAGE` | Hanya API ≤ 28 (`maxSdkVersion="28"`) | Simpan ke galeri di Android 9 ke bawah |
-| `POST_NOTIFICATIONS` | Hanya bila notifikasi dipakai (Android 13+) | FR-12, FR-23 |
-| `FOREGROUND_SERVICE` (+ tipe sesuai versi) | Fase 2 | Pemrosesan video |
-| `WAKE_LOCK` | Fase 2 | Menjaga proses video |
+| `POST_NOTIFICATIONS` | Dipakai sejak Fase 1 (Android 13+), diminta kontekstual | FR-12, FR-23 |
+| `FOREGROUND_SERVICE` + `FOREGROUND_SERVICE_DATA_SYNC` | Dipakai sejak Fase 1 (`EnhancerService`) | FR-12, FR-13, FR-23 |
+| `WAKE_LOCK` | Dipakai sejak Fase 1 (PARTIAL, dibatasi 30 menit per job) | FR-13, FR-23 |
 
 Pengaturan manifest lain: `android:allowBackup="false"`, `abiFilters "arm64-v8a"`, deklarasi fitur Vulkan sebagai opsional (`android.hardware.vulkan.version` dengan `required="false"`) agar aplikasi tetap terpasang di perangkat tanpa Vulkan dan memakai fallback CPU.
 
@@ -897,10 +915,10 @@ Setiap milestone punya kriteria keluar. Tidak melanjutkan sebelum kriteria terpe
 - **Keluar:** laporan benchmark + prototipe yang menyimpan satu foto hasil ke galeri.
 
 ### Fase 1: MVP Foto
-- [ ] FR-01 sampai FR-07, FR-10 (P0).
+- [ ] FR-01 sampai FR-07, FR-10, FR-13 (P0).
 - [ ] Tiling lengkap, alpha, EXIF, fallback GPU → CPU.
 - [ ] Progres, cancel, pratinjau slider, simpan MediaStore.
-- [ ] FR-08, FR-09, FR-11 (P1).
+- [ ] FR-08, FR-09, FR-12 (P1). FR-11 batch belum.
 - [ ] Seluruh set uji 18.3 + TC-01 sampai TC-12 lulus.
 - [ ] Izin `INTERNET` dihapus pada build final; APK release bertanda tangan.
 - **Keluar:** Definition of Done Fase 1 (bagian 22).

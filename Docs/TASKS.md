@@ -2,6 +2,8 @@
 
 Daftar tugas bercentang per fase. Rujukan: `PRD.md` (FR-xx, bagian 20 dan 22). **Jangan pindah fase sebelum kriteria keluar fase sebelumnya terpenuhi.**
 
+Arsip hasil per fase (apa yang sudah benar-benar selesai + bukti uji): [`fase_done.md`](fase_done.md).
+
 Legenda: `[ ]` belum · `[x]` selesai · **P0** wajib · **P1** sebaiknya · **P2** opsional.
 
 ---
@@ -85,13 +87,21 @@ Tujuan: membuktikan jalur teknis dan mengukur performa di HP sendiri.
 - [ ] Pemetaan preset → parameter teknis
 
 ### 1.3 P1
-- [ ] Riwayat (JSON di `filesDir`) (FR-08)
-- [ ] Pengaturan (FR-09)
+- [x] Riwayat (JSON di `filesDir`, maks 60 entri, layar daftar + detail) (FR-08)
+- [x] Pengaturan (tema, skala bawaan, bersihkan cache, versi) (FR-09)
 - [ ] Batch foto (FR-11)
 - [ ] Onboarding satu layar ("offline & privat")
 
-### 1.4 P2
-- [ ] Notifikasi penyelesaian (FR-12)
+### 1.4 Notifikasi & ketahanan proses (FR-12, FR-13) — selesai
+- [x] `ProsesNotif.kt`: kanal `arulume.proses` (LOW, ongoing, bar progres) dan `arulume.hasil`
+- [x] `EnhancerService.kt`: foreground service tipe `dataSync` + `PARTIAL_WAKE_LOCK` (30 menit)
+- [x] `JobRunner.kt`: job dipindah dari plugin ke object mandiri (tetap hidup tanpa WebView)
+- [x] Progres dari C++ per tile (`ProgressBridge` → `TileProgress.onTile`), dipetakan ke 15–88%
+- [x] Izin `POST_NOTIFICATIONS` diminta kontekstual (`mintaIzinNotifikasi`), ditolak pun proses jalan
+- [x] `getJobStatus()` + pemulihan layar Editor setelah aplikasi dibuka ulang
+- [x] Terbukti di Redmi Note 8: job tetap selesai walau Home ditekan; notifikasi bergerak 21% → 81% → 100%
+- [ ] Uji tambahan: proses dibunuh sistem (`am kill` / Doze) saat job berjalan
+- [ ] Uji di Android 13+ (dialog izin notifikasi) dan Android 14+ (`foregroundServiceType` ditegakkan)
 
 ### 1.5 Mutu
 - [ ] Jalankan set uji foto #1-#13 (PRD 18.3)

@@ -38,8 +38,17 @@ object EnhancerNative {
         width: Int,
         height: Int,
         tile: Int,
-        pad: Int
+        pad: Int,
+        progress: TileProgress?
     ): IntArray?
+
+    /**
+     * Dipanggil dari C++ setiap satu tile selesai (thread `enhancer-worker`).
+     * Dipakai untuk bar progres di notifikasi dan di layar Editor.
+     */
+    fun interface TileProgress {
+        fun onTile(done: Int, total: Int)
+    }
 
     /** Ringkasan konfigurasi mesin dalam bentuk JSON. */
     external fun nativeInfo(handle: Long): String

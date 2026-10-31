@@ -24,10 +24,9 @@ import com.getcapacitor.PluginMethod
 import com.getcapacitor.annotation.CapacitorPlugin
 import com.getcapacitor.annotation.Permission
 import com.getcapacitor.annotation.PermissionCallback
+import org.json.JSONObject
 import java.io.File
 import java.util.concurrent.Executors
-import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Plugin `Enhancer` — Docs/PRD.md bagian 10, Docs/ARCHITECTURE.md bagian 6.
@@ -46,15 +45,29 @@ import java.util.concurrent.atomic.AtomicLong
             alias = "storage",
             strings = [Manifest.permission.WRITE_EXTERNAL_STORAGE],
         ),
+        Permission(
+            alias = "notifikasi",
+            strings = ["android.permission.POST_NOTIFICATIONS"],
+        ),
     ],
 )
 class EnhancerPlugin : Plugin() {
 
+    /** Pendengar event dari [JobRunner]; dilepas saat plugin dihancurkan. */
+    private var pendengarJob: ((String, JSObject) -> Unit)? = null
+
     override fun load() {
         instance = this
+        // Job sekarang berjalan di layanan foreground; plugin hanya meneruskan
+        // event-nya ke WebView (kalau WebView masih ada).
+        val l: (String, JSObject) -> Unit = { event, data -> notifyListeners(event, data) }
+        pendengarJob = l
+        JobRunner.tambahPendengar(l)
     }
 
     override fun handleOnDestroy() {
+        pendengarJob?.let { JobRunner.hapusPendengar(it) }
+        pendengarJob = null
         if (instance === this) instance = null
         super.handleOnDestroy()
     }
@@ -134,7 +147,7 @@ class EnhancerPlugin : Plugin() {
 
                 val px = syntheticImage(size)
                 val tRun = SystemClock.elapsedRealtime()
-                val out = EnhancerNative.nativeUpscale(handle, px, size, size, tile, 16)
+                val out = EnhancerNative.nativeUpscale(handle, px, size, size, tile, 16, null)
                 val inferMs = SystemClock.elapsedRealtime() - tRun
                 if (out == null) {
                     call.reject("Inferensi gagal", "E_INFER")
@@ -329,39 +342,85 @@ class EnhancerPlugin : Plugin() {
         val out = call.getObject("output")
         val quality = (out?.getInteger("quality") ?: 95).coerceIn(60, 100)
 
-        val jobId = "job-${jobSeq.incrementAndGet()}"
-        val cancelled = AtomicBoolean(false)
-        activeJobId = jobId
-        activeCancel = cancelled
+        val jobId = JobRunner.jobIdBaru()
+        val params = JobRunner.Params(
+            jobId = jobId,
+            uri = uriStr,
+            modelId = modelId,
+            scale = scale,
+            useGpu = useGpu,
+            tileSize = tileReq,
+            maxOutputLongSide = maxOut,
+            quality = quality,
+        )
 
-        // Kontrak: kembali segera, kerja berat di enhancer-worker.
+        // Kontrak: kembali segera. Kerja berat pindah ke layanan foreground
+        // supaya tetap jalan saat aplikasi ditinggal atau layar mati.
         call.resolve(JSObject().put("jobId", jobId))
-
-        worker.execute {
-            runEnhanceJob(
-                jobId = jobId,
-                uriStr = uriStr,
-                modelId = modelId,
-                scale = scale,
-                useGpu = useGpu,
-                tileReq = tileReq,
-                maxOut = maxOut,
-                quality = quality,
-                cancelled = cancelled,
+        try {
+            EnhancerService.mulai(context, params)
+        } catch (t: Throwable) {
+            Log.e(TAG, "Layanan proses gagal dimulai", t)
+            notifyListeners(
+                "failed",
+                JSObject()
+                    .put("jobId", jobId)
+                    .put("code", "E_UNKNOWN")
+                    .put("message", "Tidak bisa memulai proses di latar")
+                    .put("recoverable", true),
             )
         }
     }
 
     @PluginMethod
     fun cancelJob(call: PluginCall) {
-        val jobId = call.getString("jobId")
-        val running = activeJobId
-        if (jobId != null && running != null && jobId != running) {
-            call.resolve()
+        JobRunner.batalkan(call.getString("jobId"))
+        call.resolve()
+    }
+
+    /**
+     * Keadaan job yang sedang berjalan. Dipakai layar Editor saat WebView lahir
+     * ulang (mis. aplikasi ditutup lalu dibuka lagi) supaya progres tetap tampil
+     * dan hasil yang sudah selesai tidak hilang.
+     */
+    @PluginMethod
+    fun getJobStatus(call: PluginCall) {
+        val s = JobRunner.status
+        if (s == null) {
+            call.resolve(JSObject().put("aktif", false))
             return
         }
-        activeCancel?.set(true)
-        call.resolve()
+        call.resolve(
+            JSObject()
+                .put("jobId", s.jobId)
+                .put("stage", s.stage)
+                .put("percent", s.percent)
+                .put("aktif", s.aktif),
+        )
+    }
+
+    /**
+     * Meminta izin notifikasi (Android 13+). Di Android 12 ke bawah langsung
+     * dianggap diberi. Notifikasi di sini murni lokal — tanpa Firebase/FCM.
+     */
+    @PluginMethod
+    fun mintaIzinNotifikasi(call: PluginCall) {
+        if (Build.VERSION.SDK_INT < 33) {
+            call.resolve(JSObject().put("granted", true))
+            return
+        }
+        if (getPermissionState("notifikasi") == PermissionState.GRANTED) {
+            call.resolve(JSObject().put("granted", true))
+            return
+        }
+        requestPermissionForAlias("notifikasi", call, "onIzinNotif")
+    }
+
+    @PermissionCallback
+    private fun onIzinNotif(call: PluginCall) {
+        call.resolve(
+            JSObject().put("granted", getPermissionState("notifikasi") == PermissionState.GRANTED),
+        )
     }
 
     /**
@@ -424,6 +483,12 @@ class EnhancerPlugin : Plugin() {
                     call.reject("Gagal menyimpan ke galeri", "E_SAVE_FAILED")
                     return@execute
                 }
+                Riwayat.tandaiTersimpan(
+                    context,
+                    file.absolutePath,
+                    saved.uri.toString(),
+                    saved.uri.lastPathSegment ?: "",
+                )
                 call.resolve(
                     JSObject()
                         .put("uri", saved.uri.toString())
@@ -481,143 +546,53 @@ class EnhancerPlugin : Plugin() {
         }
     }
 
-    /** Inti job: dekode → muat model → inferensi → simpan. Semua di worker. */
-    private fun runEnhanceJob(
-        jobId: String,
-        uriStr: String,
-        modelId: String,
-        scale: Int,
-        useGpu: Boolean,
-        tileReq: Int,
-        maxOut: Int,
-        quality: Int,
-        cancelled: AtomicBoolean,
-    ) {
-        val t0 = SystemClock.elapsedRealtime()
-        var handle = 0L
-        var src: Bitmap? = null
-        var result: Bitmap? = null
-        try {
-            val ctx = context
-            ImagePipeline.pruneResults(ctx)
-            emitProgress(jobId, "decoding", 5)
-
-            val uri = Uri.parse(uriStr)
-            val inputCap = (maxOut / scale).coerceAtLeast(64)
-            src = ImagePipeline.decode(ctx, uri, inputCap)
-            if (src == null) {
-                failJob(jobId, "E_DECODE_FAILED", "Foto tidak bisa dibaca")
-                return
-            }
-            if (cancelled.get()) {
-                failJob(jobId, "E_CANCELLED", "Dibatalkan")
-                return
-            }
-            emitProgress(jobId, "decoding", 12)
-
-            val beforePath = ImagePipeline.writePreview(ctx, src, 720)
-
-            val dir = File(ctx.cacheDir, "models").apply { mkdirs() }
-            val param = File(dir, "$modelId.param")
-            val bin = File(dir, "$modelId.bin")
-            copyAsset(ctx, "models/$modelId.param", param)
-            copyAsset(ctx, "models/$modelId.bin", bin)
-
-            val threads = maxOf(1, Runtime.getRuntime().availableProcessors() / 2)
-            handle = EnhancerNative.nativeCreate(param.absolutePath, bin.absolutePath, threads, useGpu)
-            if (handle == 0L) {
-                failJob(jobId, "E_MODEL_MISSING", "Model gagal dimuat")
-                return
-            }
-            emitProgress(jobId, "enhancing", 20)
-
-            val w = src.width
-            val h = src.height
-            // Pemotongan wajib di atas 512 px: satu lintasan 1024² mematikan proses.
-            val tile = if (tileReq > 0) tileReq else if (maxOf(w, h) > 512) 256 else 0
-
-            val px = ImagePipeline.toArgb(src)
-            val outPx = EnhancerNative.nativeUpscale(handle, px, w, h, tile, 16)
-            if (outPx == null) {
-                failJob(jobId, "E_OUT_OF_MEMORY", "Kehabisan memori saat memproses")
-                return
-            }
-            Log.i(TAG, "Sumber ${w}x$h → hasil ${w * scale}x${h * scale}, tile=$tile")
-            emitProgress(jobId, "enhancing", 90)
-
-            if (cancelled.get()) {
-                failJob(jobId, "E_CANCELLED", "Dibatalkan")
-                return
-            }
-
-            result = ImagePipeline.fromArgb(outPx, w * scale, h * scale)
-            emitProgress(jobId, "encoding", 94)
-
-            val afterPath = ImagePipeline.writePreview(ctx, result, 1080)
-            emitProgress(jobId, "saving", 97)
-
-            // PRD FR-06 (revisi): hasil TIDAK langsung masuk galeri. User melihat
-            // dulu di layar Hasil, baru menekan Simpan → `saveToGallery`.
-            val file = ImagePipeline.writeResult(ctx, result, quality)
-            if (file == null) {
-                failJob(jobId, "E_SAVE_FAILED", "Gagal menyiapkan hasil")
-                return
-            }
-
-            emitProgress(jobId, "saving", 100)
-            val done = JSObject()
-                .put("jobId", jobId)
-                .put("resultPath", file.absolutePath)
-                .put("outputUri", "")
-                .put("outputWidth", result.width)
-                .put("outputHeight", result.height)
-                .put("durationMs", SystemClock.elapsedRealtime() - t0)
-                .put("usedGpu", useGpu)
-                .put("tileSizeUsed", tile)
-                .put("beforePreviewPath", beforePath)
-                .put("afterPreviewPath", afterPath)
-            Log.i(TAG, "Job selesai: ${done.toString()}")
-            notifyListeners("completed", done)
-        } catch (e: OutOfMemoryError) {
-            Log.e(TAG, "Job $jobId kehabisan memori", e)
-            failJob(jobId, "E_OUT_OF_MEMORY", "Kehabisan memori saat memproses")
-        } catch (t: Throwable) {
-            Log.e(TAG, "Job $jobId gagal", t)
-            failJob(jobId, "E_UNKNOWN", t.message ?: "Terjadi kesalahan")
-        } finally {
-            if (handle != 0L) {
-                try {
-                    EnhancerNative.nativeDestroy(handle)
-                } catch (t: Throwable) {
-                    Log.w(TAG, "Lepas model gagal: ${t.message}")
-                }
-            }
-            src?.recycle()
-            result?.recycle()
-            if (activeJobId == jobId) {
-                activeJobId = null
-                activeCancel = null
-            }
+    /** Riwayat pekerjaan (PRD FR-08), terbaru lebih dulu. */
+    @PluginMethod
+    fun listHistory(call: PluginCall) {
+        val items = JSArray()
+        Riwayat.load(context).forEach { e ->
+            val path = e.optString("resultPath")
+            // hasResult=false artinya berkas cache sudah dipangkas; UI harus
+            // mengarahkan user ke galeri (kalau sudah disimpan).
+            e.put("hasResult", path.isNotEmpty() && File(path).exists())
+            items.put(e)
         }
+        call.resolve(JSObject().put("items", items))
     }
 
-    private fun emitProgress(jobId: String, stage: String, percent: Int) {
-        notifyListeners(
-            "progress",
-            JSObject().put("jobId", jobId).put("stage", stage).put("percent", percent),
-        )
+    /** Satu entri riwayat; dipakai layar "lihat lagi" tanpa membawa data di URL. */
+    @PluginMethod
+    fun getHistory(call: PluginCall) {
+        val id = call.getString("id")
+        if (id.isNullOrBlank()) {
+            call.reject("id kosong", "E_UNKNOWN")
+            return
+        }
+        val e = Riwayat.load(context).firstOrNull { it.optString("id") == id }
+        if (e == null) {
+            call.reject("Entri riwayat tidak ditemukan", "E_UNKNOWN")
+            return
+        }
+        val path = e.optString("resultPath")
+        e.put("hasResult", path.isNotEmpty() && File(path).exists())
+        call.resolve(JSObject(e.toString()))
     }
 
-    private fun failJob(jobId: String, code: String, message: String) {
-        Log.w(TAG, "Job $jobId gagal: $code — $message")
-        notifyListeners(
-            "failed",
-            JSObject()
-                .put("jobId", jobId)
-                .put("code", code)
-                .put("message", message)
-                .put("recoverable", code != "E_OUT_OF_MEMORY"),
-        )
+    /** Hapus satu entri. Foto di galeri TIDAK ikut dihapus (PRD FR-08). */
+    @PluginMethod
+    fun deleteHistory(call: PluginCall) {
+        val id = call.getString("id")
+        if (id.isNullOrBlank()) {
+            call.reject("id kosong", "E_UNKNOWN")
+            return
+        }
+        call.resolve(JSObject().put("deleted", Riwayat.hapus(context, id)))
+    }
+
+    @PluginMethod
+    fun clearHistory(call: PluginCall) {
+        Riwayat.kosongkan(context)
+        call.resolve()
     }
 
     /** Model yang skala aslinya cocok; kalau tidak ada, pakai model default. */
@@ -792,9 +767,7 @@ class EnhancerPlugin : Plugin() {
     }
 
     /** Status job yang sedang jalan; hanya satu pada satu waktu (worker tunggal). */
-    private var activeJobId: String? = null
-    private var activeCancel: AtomicBoolean? = null
-    private val jobSeq = AtomicLong(0)
+
 
     /** Mencegah dua pemilih foto terbuka bersamaan. */
     private var pendingPick = false

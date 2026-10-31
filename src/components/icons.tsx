@@ -88,3 +88,30 @@ export function IconDownload({ className, size = 24 }: IconProps) {
     </svg>
   );
 }
+
+export function IconTrash({ className, size = 24 }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13M10 11v6M14 11v6" />
+    </svg>
+  );
+}
+
+export function IconClock({ className, size = 24 }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7.5V12l3 2" />
+    </svg>
+  );
+}
+
+export function IconImage({ className, size = 24 }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <rect x="3.5" y="4.5" width="17" height="15" rx="3" />
+      <circle cx="9" cy="10" r="1.6" />
+      <path d="m4 17 4.5-4.5 3.5 3.5 3-3L20 17" />
+    </svg>
+  );
+}

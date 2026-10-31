@@ -47,6 +47,9 @@ export const viewport: Viewport = {
 const themeScript = `
 try {
   var t = localStorage.getItem("arulume.theme");
+  if (t === "system") {
+    t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
   if (t === "light" || t === "dark") document.documentElement.dataset.theme = t;
 } catch (e) {}
 `;
