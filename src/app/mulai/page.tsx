@@ -9,7 +9,7 @@
  */
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Mascot, MASCOT_ROLE } from "@/components/mascot";
+import { Mascot } from "@/components/mascot";
 import { IconCheck, IconLock, IconSparkle } from "@/components/icons";
 import { bacaOnboarding, simpanOnboarding } from "@/lib/settings";
 
@@ -58,8 +58,8 @@ export default function OnboardingPage() {
 
       <section className="flex flex-1 flex-col justify-center gap-6 pb-8">
         <div className="flex flex-col items-center gap-4 text-center">
-          <Mascot mood={MASCOT_ROLE.berbinar} size={132} />
-          <h1 className="text-title">Kembalikan cahaya fotomu</h1>
+          <Mascot mood="mata-bulat" size={132} />
+          <h1 className="text-title">Selamat datang di Arulume</h1>
           <p className="max-w-[34ch] text-body text-text-2">
             Foto lama, buram, atau kecil bisa dibuat lebih jelas — semuanya di HP
             ini.

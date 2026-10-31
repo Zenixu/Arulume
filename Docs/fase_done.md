@@ -171,6 +171,27 @@ Dua perbaikan yang lahir dari uji ini:
   terpotong (sisanya abu-abu). Sekarang `ImagePipeline.berkasUtuh` memeriksa penanda
   akhir (JPEG `FF D9`, PNG `IEND`) sebelum dekode, jadi user dapat pesan jelas.
 
+### Sapaan beranda & mata maskot (revisi tampilan)
+
+Keluhan: maskot terbaca sebagai siluet tanpa mata, dan kalimat beranda terasa kaku.
+
+- Judul beranda: "Kembalikan cahaya fotomu" → **"Selamat datang di Arulume"** (menyapa, bukan slogan).
+- Subjudul: "Semua diproses di HP. Tanpa unggah." → **"Perjelas foto dan video lama, semuanya di HP-mu."**
+  (menyebut fungsi: foto *dan* video, tanpa kata teknis).
+- **Mata:** dulu mata hanya lubang transparan di dalam path, jadi di layar terbaca sebagai
+  dua bolong kosong. Sekarang tiap lubang mata diberi pupil (`src/components/mascot/eyes.ts`),
+  sehingga mata terbaca sebagai mata pada ukuran 160 px sampai 40 px.
+- Posisi pupil dicari otomatis: tiap SVG dirasterkan, lubang tertutup dideteksi, lalu dua lubang
+  berukuran mirip di bagian atas dipakai sebagai mata. Hasilnya diperiksa satu per satu; hanya
+  ekspresi yang benar-benar tepat yang dipakai: `duduk-manis`, `mata-bulat`, `mengendap`,
+  `berbaring`, `duduk-ekor-panjang`. Ekspresi lain tetap siluet sampai ada pass desain khusus.
+- Layar perkenalan (`/mulai`) memakai `mata-bulat` dan daftar riwayat kosong memakai `mengendap`,
+  supaya layar besar yang pertama dilihat user selalu bermata.
+
+Catatan teknis yang bikin pupil sempat tidak terlihat: isi `<g transform>` pada `paths.ts`
+memakai koordinat path asli (skala 0,1 dan sumbu Y terbalik). Pupil harus digambar **di luar**
+`<g>` dengan koordinat `viewBox`, bukan di dalamnya.
+
 Sisa Fase 1:
 
 - Uji di Android 13+ (dialog `POST_NOTIFICATIONS`) dan Android 14+ (`foregroundServiceType` ditegakkan).

@@ -27,7 +27,7 @@ const jakarta = localFont({
 
 export const metadata: Metadata = {
   title: "Arulume",
-  description: "Kembalikan cahaya fotomu — semua diproses di HP, tanpa internet.",
+  description: "Perjelas foto dan video lama, semuanya di HP tanpa internet.",
   applicationName: "Arulume",
 };
 

@@ -1,3 +1,4 @@
+import { MASCOT_EYES } from "./eyes";
 import { MASCOT_SHAPES, type MascotMood } from "./paths";
 
 /**
@@ -57,7 +58,9 @@ export function Mascot({
   animate = false,
   className = "",
 }: MascotProps) {
-  const shape = MASCOT_SHAPES[resolveMood(mood)];
+  const nama = resolveMood(mood);
+  const shape = MASCOT_SHAPES[nama];
+  const mata = MASCOT_EYES[nama];
   const [vbW, vbH] = shape.viewBox.split(/\s+/).slice(2, 4).map(Number);
   const ratio = vbH / vbW;
   const width = size;
@@ -78,6 +81,13 @@ export function Mascot({
       <g transform={shape.transform}>
         <path d={shape.d} />
       </g>
+      {/* Pupil digambar di luar <g>: koordinat MASCOT_EYES memakai ruang viewBox,
+          sedangkan isi <g> memakai koordinat path asli (skala 0,1 dan sumbu Y
+          terbalik). Lubang mata transparan, jadi titik inilah yang membuat mata
+          terbaca sebagai mata, bukan dua lubang kosong. */}
+      {mata?.map((m) => (
+        <circle key={`${m.cx}-${m.cy}`} cx={m.cx} cy={m.cy} r={m.r * 0.45} />
+      ))}
     </svg>
   );
 }

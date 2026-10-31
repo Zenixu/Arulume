@@ -9,7 +9,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Capacitor } from "@capacitor/core";
-import { Mascot, MASCOT_ROLE } from "@/components/mascot";
+import { Mascot } from "@/components/mascot";
 import { IconArrowLeft, IconClock, IconTrash } from "@/components/icons";
 import { Enhancer, isNative, type HistoryEntry } from "@/plugins/enhancer";
 
@@ -148,7 +148,7 @@ export default function Riwayat() {
         <p className="py-10 text-center text-body text-text-2">Memuat…</p>
       ) : items.length === 0 ? (
         <section className="flex flex-1 flex-col items-center justify-center gap-4 pb-16 text-center">
-          <Mascot mood={MASCOT_ROLE.mengintip} size={120} />
+          <Mascot mood="mengendap" size={120} />
           <div className="flex flex-col gap-1">
             <span className="text-heading">Belum ada cerita</span>
             <span className="text-body text-text-2">

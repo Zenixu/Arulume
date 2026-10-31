@@ -158,9 +158,9 @@ export default function Beranda() {
       <section className="flex flex-1 flex-col items-center justify-center gap-4 py-6 text-center">
         <Mascot mood={MASCOT_ROLE.netral} size={160} animate />
         <div className="flex flex-col gap-1.5">
-          <h1 className="text-title">Kembalikan cahaya fotomu</h1>
+          <h1 className="text-title">Selamat datang di Arulume</h1>
           <p className="text-body text-text-2">
-            Semua diproses di HP. Tanpa unggah.
+            Perjelas foto dan video lama, semuanya di HP-mu.
           </p>
         </div>
       </section>
@@ -225,7 +225,7 @@ export default function Beranda() {
 
         {terbaru.length === 0 ? (
           <div className="flex items-center gap-3 rounded-md border border-border bg-surface px-3 py-3">
-            <Mascot mood={MASCOT_ROLE.mengintip} size={40} className="text-text-2" />
+            <Mascot mood="mengendap" size={40} className="text-text-2" />
             <div className="flex flex-col">
               <span className="text-body text-text">Belum ada cerita</span>
               <span className="text-caption text-text-2">
