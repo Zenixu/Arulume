@@ -44,8 +44,8 @@ Tujuan: membuktikan jalur teknis dan mengukur performa di HP sendiri.
 - [x] Fallback CPU berfungsi — CPU justru **lebih cepat** dari Vulkan di Adreno 610 (lihat `benchmark-fase0.md` §5)
 
 ### 0.6 Simpan hasil
-- [ ] Simpan JPEG ke `Pictures/Arulume` lewat MediaStore (`IS_PENDING`)
-- [ ] Hasil terbuka normal di aplikasi Galeri
+- [x] Simpan JPEG ke `Pictures/Arulume` lewat MediaStore (`IS_PENDING`) — dikerjakan di Fase 1 (`MediaSaver`, tombol Simpan)
+- [x] Hasil terbuka normal di aplikasi Galeri — `Arulume_20261031_113847.jpg` terbuka normal
 
 ### 0.7 Verifikasi asumsi
 - [x] **[VERIFIKASI A7]** Hapus izin `INTERNET`; UI tetap termuat dan berfungsi — terbukti di Redmi Note 8
@@ -53,8 +53,8 @@ Tujuan: membuktikan jalur teknis dan mengukur performa di HP sendiri.
 - [x] Cek model dapat dimuat dari assets atau perlu disalin ke `filesDir` — **perlu disalin**: ncnn butuh jalur berkas nyata, jadi `EnhancerPlugin` menyalin ke `cacheDir/models` sekali (131–266 ms)
 
 ### 0.8 Benchmark
-- [ ] Jalankan protokol di `benchmark-fase0.md` (GPU/CPU × tile × skala)
-- [ ] Tetapkan tile default, batas input, dan angka target NFR-P final
+- [x] Jalankan protokol di `benchmark-fase0.md` (GPU/CPU × tile × skala) — hasil di `benchmark-fase0.md` §5
+- [x] Tetapkan tile default, batas input, dan angka target NFR-P final — tile 256/pad 16, keluaran maks 2048 px, CPU lebih cepat dari Vulkan di HP uji
 - [ ] Perbarui PRD (angka target) bila berbeda jauh
 
 **Kriteria keluar Fase 0:** prototipe menyimpan satu foto hasil ke galeri tanpa internet; laporan benchmark terisi; A7 dan A8 terjawab.
@@ -105,9 +105,9 @@ Tujuan: membuktikan jalur teknis dan mengukur performa di HP sendiri.
 - [ ] Uji di Android 13+ (dialog izin notifikasi) dan Android 14+ (`foregroundServiceType` ditegakkan)
 
 ### 1.5 Mutu
-- [ ] Jalankan set uji foto #1-#13 (PRD 18.3)
+- [ ] Jalankan set uji foto #1-#13 (PRD 18.3) — 11 dari 13 lulus (tabel di `fase_done.md`); #6 HEIC dan #11 wajah belum punya berkas uji
 - [ ] TC-01 sampai TC-12 lulus (PRD 18.5)
-- [ ] 20 proses berturut-turut: tanpa crash, memori stabil
+- [x] 20 proses berturut-turut: tanpa crash, memori stabil — 20/20 selesai, proses sama, tanpa entri log crash
 - [ ] Uji rotasi layar dan background/foreground saat proses
 - [ ] Audit aksesibilitas dasar (kontras, target sentuh, TalkBack)
 - [x] Ikon aplikasi (adaptive + monokrom + 5 densitas PNG) dan splash
@@ -121,18 +121,34 @@ Tujuan: membuktikan jalur teknis dan mengukur performa di HP sendiri.
 
 ## Fase 2: Video
 
-- [ ] Pilih video + metadata (durasi, resolusi, fps, codec, rotasi, audio) (FR-20)
-- [ ] Pengaturan video + validasi durasi/resolusi/ruang/baterai (FR-21)
-- [ ] Pipeline streaming: MediaExtractor → decoder → enhance → encoder → MediaMuxer (FR-22)
-- [ ] Audio passthrough (transcode AAC bila tak kompatibel)
-- [ ] Foreground service + wake lock + notifikasi progres (FR-23)
-- [ ] Pemantauan thermal, jeda/abort otomatis (FR-24)
-- [ ] Progres per frame, jeda/lanjut, batal bersih (FR-25)
-- [ ] Simpan ke `Movies/Arulume` (FR-26)
-- [ ] Pratinjau video (P1) (FR-27)
-- [ ] Evaluasi flicker pada klip 5, 10, 30, 60 detik; pilih model dan pengaturan terbaik
-- [ ] Layar UI video sesuai `design.md`
-- [ ] Perbarui izin manifest (foreground service, wake lock, notifikasi) dan `THIRD_PARTY.md`
+Urutan kerja: buktikan pipeline-nya dulu di klip 5 detik (2.1), baru bangun layanan dan layarnya (2.2),
+terakhir kejar mutu (2.3). Jangan menyentuh UI sebelum satu klip pendek keluar utuh dengan audio yang masih sinkron —
+kalau pipeline belum jalan, layar apa pun cuma menampilkan progres yang tidak pernah selesai.
+
+### 2.1 Pipeline (P0) — buktikan dulu
+- [ ] Baca metadata klip lewat `MediaExtractor`: durasi, resolusi, fps, codec, rotasi, ada/tidak audio (FR-20)
+- [ ] Decode satu klip 5 detik jadi frame RGB (`MediaCodec` + YUV→RGB), catat waktu per frame
+- [ ] Jalankan satu frame lewat mesin foto yang sudah ada, catat waktu enhance per frame
+- [ ] Encode + mux **tanpa** enhance (decode → encode langsung) → pastikan PTS benar dan audio passthrough utuh
+- [ ] Sambungkan decode → enhance → encode → mux untuk klip 5 detik; hasil bisa diputar di galeri
+- [ ] Ukur fps efektif, memori puncak, dan suhu; tentukan batas durasi & resolusi default (sisi panjang 1280 px)
+- [ ] Putuskan model dan kekuatan restorasi dari uji flicker klip 5 detik (FR-21)
+
+### 2.2 Layanan dan UI (P0)
+- [ ] `VideoJobRunner` + foreground service `dataSync` + `PARTIAL_WAKE_LOCK` + notifikasi progres (FR-23)
+- [ ] Progres per frame + estimasi sisa waktu; tombol Jeda/Lanjut; batal menghapus file sementara (FR-25)
+- [ ] Pemantauan termal API 29+ (jeda otomatis, `E_THERMAL_ABORT` bila perlu) + peringatan baterai < 30 % (FR-24)
+- [ ] Cek ruang kosong sebelum mulai (perkiraan ukuran keluaran + margin) (FR-26)
+- [ ] Simpan ke `Movies/Arulume` lewat MediaStore (FR-26)
+- [ ] Layar pilih video + pengaturan video (skala 2×, H.264/HEVC, bitrate otomatis, batas durasi 60 detik) sesuai `design.md` (FR-21)
+- [ ] Pratinjau hasil sebelum/sesudah (P1) (FR-27)
+- [ ] Perbarui izin manifest bila perlu dan `THIRD_PARTY.md`
+
+### 2.3 Mutu (P0)
+- [ ] Uji klip 5, 10, 30, 60 detik: audio utuh & sinkron, fps/rasio/rotasi benar
+- [ ] Layar mati saat proses → job tetap selesai; batal bersih tanpa file parsial
+- [ ] Uji termal: beberapa klip 60 detik berturut-turut tanpa crash dan tanpa file rusak
+- [ ] Evaluasi flicker dan catat keputusan model di `fase_done.md`
 
 **Kriteria keluar Fase 2:** Definition of Done Fase 2 (PRD bagian 22).
 
@@ -156,7 +172,7 @@ Tujuan: membuktikan jalur teknis dan mengukur performa di HP sendiri.
 - [x] Ekspor mockup ke `stitch/` (HTML + PNG) dan perbarui `design.md` bagian 11
 - [x] Gambar maskot orisinal — 40 ekspresi di `assets/mascot/svg/` (SVG `currentColor`), lihat `assets/mascot/README.md`
 - [x] Cek kontras seluruh pasangan warna (gelap dan terang) — 19 pasangan per mode, semua ≥ 4,5:1 (hasil di `design.md` bagian 3.1)
-- [ ] Rancang ikon aplikasi (adaptive icon)
+- [x] Rancang ikon aplikasi (adaptive icon) — logo kucing-A dari pemilik, tanpa teks; `assets/logo/buat-ikon.py`
 
 ## Tugas dokumen
 

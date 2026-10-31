@@ -9,6 +9,23 @@ Kategori: **Added** (baru) · **Changed** (diubah) · **Fixed** (diperbaiki) · 
 ## [Unreleased]
 
 ### Added
+- **MVP foto (Fase 1):** alur pilih foto → Editor (2×/4×) → proses asinkron → layar Hasil
+  (pembanding geser satu jari, cubit sampai 5×) → tombol Simpan manual ke `Pictures/Arulume`
+  sebagai `Arulume_{yyyyMMdd-HHmmss}.jpg`. Hasil **tidak** masuk galeri otomatis.
+- Pilih banyak foto sekaligus (Photo Picker `ACTION_PICK_IMAGES` + `EXTRA_ALLOW_MULTIPLE`, fallback SAF),
+  maksimal 20 foto, diproses berurutan dalam satu job; layar `/batch` dengan keadaan per foto dan "Simpan semua".
+- Riwayat (`filesDir/riwayat.json`, maks 60 entri) + layar `/riwayat` (pilih & hapus dua tahap) dan
+  `/riwayat/lihat`; Beranda menampilkan 3 entri terbaru.
+- Pengaturan: tema Gelap/Terang/Ikuti sistem, skala bawaan, format hasil JPEG/PNG/WebP, bersihkan cache,
+  info versi, dan layar Tentang & lisensi.
+- Notifikasi progres lokal (`ProsesNotif.kt`) + `EnhancerService` foreground `dataSync` +
+  `PARTIAL_WAKE_LOCK`; `JobRunner` memindahkan job keluar dari plugin sehingga tetap selesai walau
+  WebView/Activity sudah hilang. Progres per tile datang dari C++ lewat `ProgressBridge`.
+- Onboarding satu layar `/mulai` (tampil sekali lewat `arulume.onboarding`).
+- Ketahanan berkas: orientasi EXIF, alpha PNG/WebP dipasang ulang setelah diperbesar, HEIC (API 28+),
+  deteksi berkas terpotong (`E_DECODE_FAILED`), fallback tile bertahap sampai `E_OUT_OF_MEMORY`.
+- Ikon peluncur dari logo Arulume (tanpa teks): adaptive icon + lapisan monokrom + 5 densitas PNG,
+  dibuat ulang lewat `assets/logo/buat-ikon.py`.
 - **Mesin inferensi native (Fase 0.5):** ncnn `20261020` (`libncnn.so` + header, Vulkan opsional) di
   `jniLibs/arm64-v8a/` dan `cpp/ncnn/`; `enhancer_jni.cpp` (JNI `nativeCreate`/`nativeUpscale`/
   `nativeInfo`/`nativeDestroy`, tile + padding), `EnhancerNative.kt`, CMake di `app/build.gradle`
@@ -38,6 +55,12 @@ Kategori: **Added** (baru) · **Changed** (diubah) · **Fixed** (diperbaiki) · 
   PNG `ink`/`paper` 3×, `preview.png`, dan sumber asli. Dipakai untuk 10 mood inti `design.md` bagian 5.4.
 
 ### Changed
+- Beranda tidak lagi memakai slogan: judul "Kembalikan cahaya fotomu" → **"Selamat datang di Arulume"**,
+  subjudul → **"Perjelas foto dan video lama, semuanya di HP-mu."**
+- Maskot: mata sebelumnya hanya lubang transparan di dalam path, sekarang diberi pupil
+  (`src/components/mascot/eyes.ts`) untuk 5 ekspresi yang sudah diperiksa.
+- Ikon vektor lama (`drawable/ic_launcher_foreground.xml`, `ic_launcher_monochrome.xml`) dihapus;
+  ikon sekarang PNG mipmap dari `assets/logo/ikon.png`.
 - Seluruh dokumen memakai nama **Arulume**: `prd-local-enhancer.md` → `PRD.md`, `Local Enhancer` → `Arulume`,
   `id.pribadi.enhancer` → `id.aruthtale.arulume`, `Pictures/Enhancer` → `Pictures/Arulume`, `Movies/Enhancer` → `Movies/Arulume`.
 - `design.md` ditetapkan sebagai **sumber tunggal token**; ditambah tabel pemetaan token Material 3 → Arulume (bagian 3.4).

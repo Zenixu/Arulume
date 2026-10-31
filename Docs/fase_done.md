@@ -38,8 +38,8 @@ Bukti:
 
 ## Fase 1 — MVP Foto
 
-**Status:** Hampir selesai — 1.1, 1.2, 1.3 selesai; sisa batch foto & mutu
-**Commit:** `a0bb737` — "fase 1 Enchancer Photo"
+**Status:** Sedang berjalan — semua fitur P0 terpasang dan teruji di HP; sisa 4 butir Definition of Done
+**Commit:** `a0bb737` (foto), `155b7f0` (riwayat, pengaturan, notifikasi), `04175c6` (batch, format, onboarding), `ee03c38` (tampilan), `55cc11d` (ikon)
 
 Yang sudah selesai dan teruji di perangkat:
 
@@ -204,11 +204,27 @@ pembuat semua ukuran: `assets/logo/buat-ikon.py`.
 - Berkas vektor lama (`drawable/ic_launcher_foreground.xml`, `ic_launcher_monochrome.xml`,
   `drawable-v24/…`) dihapus supaya tidak ada dua sumber ikon.
 
-Sisa Fase 1:
+### Status terhadap Definition of Done Fase 1 (PRD bagian 22)
 
-- Uji di Android 13+ (dialog `POST_NOTIFICATIONS`) dan Android 14+ (`foregroundServiceType` ditegakkan).
-- Mutu: set uji foto #1–#13, TC-01–TC-12, APK rilis bertanda tangan (ikon adaptive, `allowBackup="false"`,
-  layar Tentang & lisensi sudah beres).
+| # | Syarat | Status | Bukti / sisa |
+|---|---|---|---|
+| 1 | Semua FR P0 Fase 1 berjalan | Hampir | FR-01…FR-13 terpasang; yang belum diuji end-to-end: bagikan hasil (TC-12) |
+| 2 | Set uji 18.3 ≥ 98 % tanpa crash | Hampir | 11 dari 11 foto valid lulus, #10 (rusak) gagal terkode sesuai rancangan; #6 HEIC dan #11 wajah belum punya berkas uji |
+| 3 | TC-01…TC-12 lulus | Belum | Lulus: TC-02, TC-04, TC-05, TC-10, TC-11. Belum: TC-01 (mode pesawat), TC-03 (batal 50 %), TC-06 (dialog batas 4× 12 MP), TC-07 (matikan GPU — belum ada tombolnya), TC-08 (penyimpanan penuh), TC-09 (rotasi), TC-12 (bagikan) |
+| 4 | APK rilis bertanda tangan ≤ 60 MB | Belum | Baru APK debug; keystore belum dibuat |
+| 5 | `aapt dump permissions` tanpa `INTERNET` | Lulus | Manifest hasil build tidak memuat `INTERNET`; hanya `WRITE_EXTERNAL_STORAGE` (maxSdk 28), `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_DATA_SYNC`, `POST_NOTIFICATIONS`, `WAKE_LOCK` |
+| 6 | Semua fitur jalan saat mode pesawat | Struktur lulus | Tidak ada izin jaringan sama sekali, jadi tidak ada jalur yang butuh internet; uji eksplisit masuk TC-01 |
+| 7 | Hasil di `Pictures/Arulume`, foto asli utuh | Lulus | Galeri bertambah hanya setelah tombol Simpan; sumber hanya dibaca |
+| 8 | Uji visual A/B: peningkatan terlihat ≥ 80 % foto | Belum | Belum ada lembar penilaian; pemilik sudah melihat sebagian hasil |
+| 9 | Tidak ada kebocoran memori pada 20 proses | Lulus | 20/20 selesai, proses sama (tanpa restart), tidak ada entri log crash |
+| 10 | `THIRD_PARTY.md` + layar Tentang lengkap | Lulus | Versi ncnn, model, lisensi, maskot, dan logo tercatat |
+
+**Sisa Fase 1** (4 hal, semuanya pengujian dan rilis — bukan fitur baru):
+
+1. Lembar TC-01…TC-12 dijalankan dan dicatat; tambah berkas uji #6 (HEIC) dan #11 (wajah).
+2. Uji di Android 13+ (dialog `POST_NOTIFICATIONS`) dan Android 14+ (`foregroundServiceType` ditegakkan).
+3. APK rilis bertanda tangan, dipasang di HP pemilik, ukuran dicek ≤ 60 MB.
+4. Uji rotasi layar saat proses, audit aksesibilitas dasar, dan penilaian visual A/B foto uji.
 
 ---
 
