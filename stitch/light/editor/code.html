@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+
+<html class="h-full bg-[#F7F6F3]" lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Arulume — Atur Peningkatan</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            bg: '#F7F6F3',
+            surface: '#FFFFFF',
+            'surface-2': '#EFEDE8',
+            border: '#E2DFD8',
+            text: '#111214',
+            'text-2': '#5B5E66',
+            accent: '#F5B83D',
+            'on-accent': '#111214',
+            'accent-text': '#8E6200',
+            success: '#28784B',
+            danger: '#BD3B3B',
+            warning: '#9C5A16',
+            background: '#F7F6F3',
+            outline: '#E2DFD8',
+            primary: '#F5B83D',
+            'on-primary': '#111214',
+            'primary-container': '#F5B83D',
+            'on-primary-container': '#111214'
+          },
+          borderRadius: {
+            DEFAULT: "0.5rem",
+            sm: "12px",
+            md: "16px",
+            lg: "1rem",
+            xl: "1.5rem",
+            full: "9999px"
+          },
+          fontFamily: {
+            headline: ["Plus Jakarta Sans", "sans-serif"],
+            display: ["Plus Jakarta Sans", "sans-serif"],
+            body: ["Plus Jakarta Sans", "sans-serif"],
+            label: ["Plus Jakarta Sans", "sans-serif"]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+      font-size: 24px;
+      line-height: 1;
+    }
+  </style>
+</head>
+<body class="h-full bg-bg text-text flex flex-col justify-between items-center selection:bg-accent selection:text-on-accent antialiased">
+<!-- Mobile Frame Container (Max 360px on wide screens for faithful preview) -->
+<div class="w-full max-w-[360px] min-h-full h-full bg-bg flex flex-col relative overflow-hidden border-x border-border/40">
+<!-- TopAppBar (From Shared Components JSON) -->
+<header class="flex items-center justify-between px-5 h-14 w-full bg-surface border-b border-border z-20 shrink-0">
+<button aria-label="Kembali" class="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-text hover:bg-surface-2 transition-colors duration-150 active:opacity-80" type="button">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-headline text-[18px] leading-[26px] font-semibold text-text text-center flex-1 pr-8">
+        Atur Peningkatan
+      </h1>
+</header>
+<!-- Scrollable Body Canvas -->
+<main class="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-5">
+<!-- HERO: Photo Section -->
+<section class="flex flex-col gap-2">
+<div class="w-full h-[300px] rounded-2xl border border-border overflow-hidden bg-surface-2 relative flex items-center justify-center">
+<img alt="Foto terpilih" class="w-full h-full object-cover select-none pointer-events-none" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXOg9kuTddaaKG41K0WVzQKk60zBoSGL-lo9sznbrEJOl0J7-_mafmAW-ucsr15Vyoc4ZfPtuexSBKQN_t5H9ZZmkli1tIUABwvlDi4sT1wOtBwEu2vcR_MwCE098itXbNBG9fSqD3tHb7dTpjobJeGUggN5x3SWQJFQLq6dpyZO1Zm3bemeP-IBoa3VNWVroYGczVlbLgtXauahIojI2UoWm8OAEXCpkY299GzDt7UFM4S9qxoVu4cbX5MJYMH_2JPAdJ3ugZGaXE"/>
+</div>
+<!-- Metadata Caption -->
+<p class="text-[12px] font-medium leading-[16px] text-text-2 text-center">
+          1000 × 1000 · 1,2 MB
+        </p>
+</section>
+<!-- Preset Section -->
+<section class="flex flex-col gap-2.5">
+<span class="text-[12px] font-medium leading-[16px] text-text-2 tracking-wide">
+          Preset
+        </span>
+<div class="flex items-center gap-2 w-full">
+<!-- Chip 1: Cepat -->
+<button class="flex-1 h-10 rounded-full bg-surface-2 text-text border border-border flex items-center justify-center text-[15px] font-medium transition-colors hover:bg-surface active:opacity-80" type="button">
+            Cepat
+          </button>
+<!-- Chip 2: Seimbang (SELECTED) -->
+<button class="flex-1 h-10 rounded-full bg-accent text-on-accent border border-accent flex items-center justify-center text-[15px] font-semibold shadow-none" type="button">
+            Seimbang
+          </button>
+<!-- Chip 3: Maksimal -->
+<button class="flex-1 h-10 rounded-full bg-surface-2 text-text border border-border flex items-center justify-center text-[15px] font-medium transition-colors hover:bg-surface active:opacity-80" type="button">
+            Maksimal
+          </button>
+</div>
+</section>
+<!-- Skala Section -->
+<section class="flex flex-col gap-2.5">
+<span class="text-[12px] font-medium leading-[16px] text-text-2 tracking-wide">
+          Skala
+        </span>
+<div class="w-full bg-surface-2 border border-border rounded-xl p-1 flex items-center">
+<!-- Segment 2x (SELECTED) -->
+<button class="flex-1 py-2 text-center text-[15px] font-semibold text-on-accent bg-accent rounded-[8px] transition-colors shadow-none" type="button">
+            2x
+          </button>
+<!-- Segment 3x -->
+<button class="flex-1 py-2 text-center text-[15px] font-medium text-text-2 hover:text-text rounded-[8px] transition-colors active:opacity-80" type="button">
+            3x
+          </button>
+<!-- Segment 4x -->
+<button class="flex-1 py-2 text-center text-[15px] font-medium text-text-2 hover:text-text rounded-[8px] transition-colors active:opacity-80" type="button">
+            4x
+          </button>
+</div>
+</section>
+<!-- Lanjutan Section (Collapsed) -->
+<section class="pt-1 pb-2">
+<button class="w-full bg-surface border border-border rounded-2xl p-4 flex items-center justify-between text-left transition-colors hover:bg-surface-2 active:opacity-80" type="button">
+<div class="flex flex-col gap-0.5">
+<span class="text-[15px] font-semibold leading-[22px] text-text">
+              Lanjutan
+            </span>
+<span class="text-[12px] font-medium leading-[16px] text-text-2">
+              Format, kualitas, GPU
+            </span>
+</div>
+<span class="material-symbols-outlined text-text-2" data-icon="keyboard_arrow_down">
+            keyboard_arrow_down
+          </span>
+</button>
+</section>
+</main>
+<!-- Bottom Pinned Action Bar -->
+<footer class="w-full bg-surface border-t border-border px-5 py-4 shrink-0 z-20">
+<button class="w-full h-14 bg-accent text-on-accent rounded-2xl font-headline font-semibold text-[16px] flex items-center justify-center border border-accent hover:opacity-95 active:opacity-80 transition-opacity" type="button">
+        Tingkatkan
+      </button>
+</footer>
+</div>
+</body></html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Arulume - Onboarding</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #111214;
+      color: #F7F6F3;
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow-x: hidden;
+    }
+    /* Mobile Android Container Frame */
+    .mobile-frame {
+      width: 100%;
+      max-width: 360px;
+      min-height: 800px;
+      height: 100vh;
+      max-height: 840px;
+      background-color: #111214;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      padding: 0 20px;
+      box-shadow: none;
+    }
+    .text-title {
+      font-size: 24px;
+      line-height: 32px;
+      font-weight: 700;
+      color: #F7F6F3;
+    }
+    .text-heading {
+      font-size: 18px;
+      line-height: 24px;
+      font-weight: 600;
+      color: #F7F6F3;
+    }
+    .text-body {
+      font-size: 15px;
+      line-height: 22px;
+      font-weight: 400;
+      color: #F7F6F3;
+    }
+    .text-body-muted {
+      font-size: 15px;
+      line-height: 22px;
+      font-weight: 400;
+      color: #A4A7AE;
+    }
+    .text-caption {
+      font-size: 12px;
+      line-height: 16px;
+      font-weight: 500;
+      color: #A4A7AE;
+    }
+  </style>
+</head>
+<body>
+  <div class="mobile-frame justify-between py-6">
+    <!-- Status Bar Spacer (Simulated Android System Inset) -->
+    <div class="w-full flex justify-between items-center pt-2 pb-1 text-caption text-[#A4A7AE] opacity-60">
+      <span>09:41</span>
+      <div class="flex items-center space-x-1.5">
+        <!-- Offline Airplane / Signal -->
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+          <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+        </svg>
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 18.25A9.957 9.957 0 0 1 2 12C2 6.48 6.48 2 12 2s10 4.48 10 10c0 2.31-.78 4.44-2.09 6.14l-.62-.62A8.966 8.966 0 0 0 21 12c0-4.97-4.03-9-9-9z" opacity="0.3"/>
+          <path d="M12 6a6 6 0 0 0-6 6c0 1.45.52 2.78 1.38 3.82l.71-.71A4.982 4.982 0 0 1 7 12a5 5 0 0 1 10 0c0 1.15-.39 2.22-1.04 3.07l.71.71A5.975 5.975 0 0 0 18 12a6 6 0 0 0-6-6z"/>
+        </svg>
+        <div class="w-4 h-2.5 border border-[#A4A7AE] rounded-sm p-0.5 flex items-center">
+          <div class="h-full w-full bg-[#A4A7AE] rounded-2xs"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col justify-center items-center w-full">
+      <!-- Mascot Illustration: Minimal solid black cat with outline and waving paw + tiny sparkle -->
+      <div class="relative w-full flex justify-center items-center" style="height: 200px;">
+        <svg width="180" height="190" viewBox="0 0 180 190" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Sparkle beside mascot -->
+          <g transform="translate(142, 38)">
+            <path d="M6 0L7.6 4.4L12 6L7.6 7.6L6 12L4.4 7.6L0 6L4.4 4.4L6 0Z" fill="#F5B83D" />
+          </g>
+          
+          <!-- Cat Body -->
+          <ellipse cx="88" cy="144" rx="46" ry="40" fill="#1B1C1F" stroke="#2F3136" stroke-width="1.75" />
+          
+          <!-- Cat Tail -->
+          <path d="M124 148C136 148 148 136 148 120C148 108 140 100 134 105C129 109 135 118 135 124C135 131 129 136 120 138" stroke="#2F3136" stroke-width="3" stroke-linecap="round" fill="none"/>
+          
+          <!-- Front paws resting -->
+          <circle cx="72" cy="168" r="8" fill="#25272B" stroke="#2F3136" stroke-width="1.75"/>
+          <circle cx="104" cy="168" r="8" fill="#25272B" stroke="#2F3136" stroke-width="1.75"/>
+
+          <!-- Cat Head -->
+          <circle cx="88" cy="88" r="40" fill="#1B1C1F" stroke="#2F3136" stroke-width="1.75" />
+          
+          <!-- Ears -->
+          <!-- Left Ear -->
+          <path d="M58 64L48 30L78 48" fill="#1B1C1F" stroke="#2F3136" stroke-width="1.75" stroke-linejoin="round"/>
+          <path d="M56 60L51 38L72 50" fill="#25272B" />
+          
+          <!-- Right Ear -->
+          <path d="M118 64L128 30L98 48" fill="#1B1C1F" stroke="#2F3136" stroke-width="1.75" stroke-linejoin="round"/>
+          <path d="M120 60L125 38L104 50" fill="#25272B" />
+          
+          <!-- Eyes (Signature glowing white cat eyes) -->
+          <circle cx="74" cy="86" r="6" fill="#F7F6F3" />
+          <circle cx="102" cy="86" r="6" fill="#F7F6F3" />
+          <circle cx="75.5" cy="84.5" r="2" fill="#111214" />
+          <circle cx="103.5" cy="84.5" r="2" fill="#111214" />
+
+          <!-- Tiny Nose -->
+          <polygon points="88,96 85.5,93 90.5,93" fill="#A4A7AE"/>
+
+          <!-- Friendly Waving Left Paw -->
+          <g>
+            <!-- Arm angled upward -->
+            <path d="M50 128C40 120 34 102 38 88C39 84 44 84 46 88C49 95 53 108 62 118" fill="#1B1C1F" stroke="#2F3136" stroke-width="1.75" stroke-linejoin="round"/>
+            <!-- Paw pad / rounded end -->
+            <circle cx="41" cy="85" r="8" fill="#25272B" stroke="#2F3136" stroke-width="1.75"/>
+            <!-- Tiny motion lines near paw -->
+            <path d="M26 80C25 84 26 88 28 92" stroke="#F5B83D" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+            <path d="M22 83C21 86 22 89 23 92" stroke="#F5B83D" stroke-width="1.5" stroke-linecap="round" opacity="0.6" fill="none"/>
+          </g>
+        </svg>
+      </div>
+
+      <!-- Title & Subtitle -->
+      <div class="text-center mt-3 mb-6 w-full">
+        <h1 class="text-title mb-2">Offline &amp; privat</h1>
+        <p class="text-body-muted max-w-[280px] mx-auto">Fotomu tidak pernah keluar dari HP ini.</p>
+      </div>
+
+      <!-- Feature Rows -->
+      <div class="w-full flex flex-col space-y-3.5">
+        <!-- Row 1: Tanpa internet, tanpa akun -->
+        <div class="flex items-center space-x-3.5">
+          <div class="w-10 h-10 rounded-full bg-[#25272B] border border-[#2F3136] flex items-center justify-center shrink-0">
+            <!-- Offline / No Cloud Icon (amber stroke 1.75) -->
+            <svg class="w-5 h-5 text-[#F5B83D]" viewBox="0 0 24 24" fill="none" stroke="#F5B83D" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22.61 16.95A5 5 0 0 0 18 10h-1.26a8 8 0 0 0-7.05-6M5 5a8 8 0 0 0-4 7h1a5 5 0 0 0 9.87 1.25" />
+              <line x1="2" y1="2" x2="22" y2="22" />
+            </svg>
+          </div>
+          <span class="text-body">Tanpa internet, tanpa akun</span>
+        </div>
+
+        <!-- Row 2: Semua diproses di HP -->
+        <div class="flex items-center space-x-3.5">
+          <div class="w-10 h-10 rounded-full bg-[#25272B] border border-[#2F3136] flex items-center justify-center shrink-0">
+            <!-- Smartphone / Processor Chip Icon (amber stroke 1.75) -->
+            <svg class="w-5 h-5 text-[#F5B83D]" viewBox="0 0 24 24" fill="none" stroke="#F5B83D" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="5" y="2" width="14" height="20" rx="3" />
+              <line x1="12" y1="18" x2="12.01" y2="18" stroke-width="2.5" />
+              <path d="M9 7h6M9 11h6" />
+            </svg>
+          </div>
+          <span class="text-body">Semua diproses di HP</span>
+        </div>
+
+        <!-- Row 3: Hasil langsung ke galeri -->
+        <div class="flex items-center space-x-3.5">
+          <div class="w-10 h-10 rounded-full bg-[#25272B] border border-[#2F3136] flex items-center justify-center shrink-0">
+            <!-- Image / Gallery Icon (amber stroke 1.75) -->
+            <svg class="w-5 h-5 text-[#F5B83D]" viewBox="0 0 24 24" fill="none" stroke="#F5B83D" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="3" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <polyline points="21 15 16 10 5 21" />
+            </svg>
+          </div>
+          <span class="text-body">Hasil langsung ke galeri</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Section: Page Dots & Actions -->
+    <div class="w-full flex flex-col items-center pt-4 pb-2">
+      <!-- Three small page dots -->
+      <div class="flex items-center space-x-2 mb-5">
+        <div class="w-2 h-2 rounded-full bg-[#F5B83D]"></div>
+        <div class="w-2 h-2 rounded-full bg-[#2F3136]"></div>
+        <div class="w-2 h-2 rounded-full bg-[#2F3136]"></div>
+      </div>
+
+      <!-- Primary CTA: Mulai -->
+      <button class="w-full h-14 bg-[#F5B83D] active:bg-[#F5B83D] text-[#111214] font-semibold text-[16px] rounded-2xl flex items-center justify-center transition-transform active:scale-[0.99] cursor-pointer">
+        Mulai
+      </button>
+
+      <!-- Secondary text button: Lewati -->
+      <button class="mt-3.5 py-1 px-3 text-caption text-[#A4A7AE] hover:text-[#F7F6F3] active:opacity-75 transition-colors cursor-pointer">
+        Lewati
+      </button>
+
+      <!-- Android Home Bar indicator -->
+      <div class="w-32 h-1 bg-[#2F3136] rounded-full mt-3"></div>
+    </div>
+  </div>
+</body>
+</html>

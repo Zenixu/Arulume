@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+
+<html lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Pengaturan — Arulume</title>
+<!-- Google Fonts: Plus Jakarta Sans -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "bg": "#F7F6F3",
+            "surface": "#FFFFFF",
+            "surface-2": "#EFEDE8",
+            "border": "#E2DFD8",
+            "text": "#111214",
+            "text-2": "#5B5E66",
+            "accent": "#F5B83D",
+            "on-accent": "#111214",
+            "accent-text": "#8E6200",
+            "success": "#28784B",
+            "danger": "#BD3B3B",
+            "warning": "#9C5A16"
+          },
+          borderRadius: {
+            "DEFAULT": "0.5rem",
+            "sm": "12px",
+            "md": "16px",
+            "lg": "24px",
+            "full": "9999px"
+          },
+          fontFamily: {
+            "headline": ["Plus Jakarta Sans", "sans-serif"],
+            "display": ["Plus Jakarta Sans", "sans-serif"],
+            "body": ["Plus Jakarta Sans", "sans-serif"],
+            "label": ["Plus Jakarta Sans", "sans-serif"]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 200, 'GRAD' 0, 'opsz' 24;
+      line-height: 1;
+      display: inline-block;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-bg text-text font-body antialiased min-h-screen flex justify-center selection:bg-accent selection:text-on-accent">
+<!-- Mobile Viewport Frame (360x800 logic) -->
+<div class="w-full max-w-[360px] min-h-screen bg-bg flex flex-col relative select-none">
+<!-- Top App Bar (Shared Components Anchor execution) -->
+<header class="flex items-center justify-between px-5 h-14 w-full bg-surface border-b border-border sticky top-0 z-30">
+<div class="flex items-center gap-3">
+<button aria-label="Kembali" class="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-text hover:bg-surface-2 active:opacity-80 transition-colors" type="button">
+<span class="material-symbols-outlined text-[22px]">arrow_back</span>
+</button>
+<h1 class="font-headline text-[18px] leading-[26px] font-semibold text-text">Pengaturan</h1>
+</div>
+<!-- Right subtle status / dummy container for balanced spacing -->
+<div class="w-6 h-6 flex items-center justify-center"></div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 px-5 pt-6 pb-12 flex flex-col gap-6">
+<!-- Group 1: TAMPILAN -->
+<section>
+<h2 class="text-[12px] leading-[16px] font-medium uppercase tracking-wider text-text-2 mb-2 px-1">
+          Tampilan
+        </h2>
+<div class="bg-surface rounded-[16px] border border-border overflow-hidden">
+<!-- Row 1: Tema -->
+<button class="w-full h-14 flex items-center justify-between px-4 border-b border-border text-left hover:bg-surface-2 active:bg-surface-2 transition-colors" type="button">
+<span class="text-[15px] leading-[22px] font-normal text-text">Tema</span>
+<div class="flex items-center gap-1.5">
+<span class="text-[12px] leading-[16px] font-medium text-text-2">Terang</span>
+<span class="material-symbols-outlined text-[18px] text-text-2">chevron_right</span>
+</div>
+</button>
+<!-- Row 2: Preset bawaan -->
+<button class="w-full h-14 flex items-center justify-between px-4 border-b border-border text-left hover:bg-surface-2 active:bg-surface-2 transition-colors" type="button">
+<span class="text-[15px] leading-[22px] font-normal text-text">Preset bawaan</span>
+<div class="flex items-center gap-1.5">
+<span class="text-[12px] leading-[16px] font-medium text-text-2">Seimbang</span>
+<span class="material-symbols-outlined text-[18px] text-text-2">chevron_right</span>
+</div>
+</button>
+<!-- Row 3: Format bawaan -->
+<button class="w-full h-14 flex items-center justify-between px-4 text-left hover:bg-surface-2 active:bg-surface-2 transition-colors" type="button">
+<span class="text-[15px] leading-[22px] font-normal text-text">Format bawaan</span>
+<div class="flex items-center gap-1.5">
+<span class="text-[12px] leading-[16px] font-medium text-text-2">JPEG</span>
+<span class="material-symbols-outlined text-[18px] text-text-2">chevron_right</span>
+</div>
+</button>
+</div>
+</section>
+<!-- Group 2: PENYIMPANAN & DATA -->
+<section>
+<h2 class="text-[12px] leading-[16px] font-medium uppercase tracking-wider text-text-2 mb-2 px-1">
+          Penyimpanan &amp; Data
+        </h2>
+<div class="bg-surface rounded-[16px] border border-border overflow-hidden">
+<!-- Row 1: Hapus cache -->
+<button class="w-full h-14 flex items-center justify-between px-4 border-b border-border text-left hover:bg-surface-2 active:bg-surface-2 transition-colors" type="button">
+<span class="text-[15px] leading-[22px] font-normal text-text">Hapus cache</span>
+<div class="flex items-center gap-1.5">
+<span class="text-[12px] leading-[16px] font-medium text-text-2">24 MB</span>
+<span class="material-symbols-outlined text-[18px] text-text-2">chevron_right</span>
+</div>
+</button>
+<!-- Row 2: Ekspor log lokal -->
+<button class="w-full h-14 flex items-center justify-between px-4 text-left hover:bg-surface-2 active:bg-surface-2 transition-colors" type="button">
+<span class="text-[15px] leading-[22px] font-normal text-text">Ekspor log lokal</span>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-text-2">chevron_right</span>
+</div>
+</button>
+</div>
+</section>
+<!-- Group 3: TENTANG -->
+<section>
+<h2 class="text-[12px] leading-[16px] font-medium uppercase tracking-wider text-text-2 mb-2 px-1">
+          Tentang
+        </h2>
+<div class="bg-surface rounded-[16px] border border-border overflow-hidden">
+<!-- Row 1: Versi -->
+<div class="w-full h-14 flex items-center justify-between px-4 border-b border-border text-left">
+<span class="text-[15px] leading-[22px] font-normal text-text">Versi</span>
+<div class="flex items-center pr-0.5">
+<span class="text-[12px] leading-[16px] font-medium text-text-2">0.1.0</span>
+</div>
+</div>
+<!-- Row 2: Tentang & lisensi -->
+<button class="w-full h-14 flex items-center justify-between px-4 text-left hover:bg-surface-2 active:bg-surface-2 transition-colors" type="button">
+<span class="text-[15px] leading-[22px] font-normal text-text">Tentang &amp; lisensi</span>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-text-2">chevron_right</span>
+</div>
+</button>
+</div>
+</section>
+<!-- Discreet Brand Signature Note -->
+<div class="mt-4 text-center">
+<p class="text-[12px] leading-[16px] font-medium text-text-2/70">
+          Arulume · Aruthtale
+        </p>
+</div>
+</main>
+</div>
+</body></html>

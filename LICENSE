@@ -1,0 +1,58 @@
+Arulume — Hak Cipta (c) 2026 Aruthtale. Seluruh hak dilindungi undang-undang.
+Arulume — Copyright (c) 2026 Aruthtale. All rights reserved.
+
+====================================================================
+BAHASA INDONESIA
+====================================================================
+
+Perangkat lunak ini, termasuk kode sumber, aset desain, maskot "Aru",
+dokumen, dan seluruh berkas pendukungnya (selanjutnya disebut "Perangkat
+Lunak"), adalah milik pribadi Aruthtale dan dilindungi hukum hak cipta.
+
+1. Perangkat Lunak ini dibuat untuk PENGGUNAAN PRIBADI pemiliknya.
+2. Dilarang menyalin, mendistribusikan, menjual, menyewakan, mensublisensikan,
+   mempublikasikan, atau membagikan Perangkat Lunak ini, baik sebagian maupun
+   seluruhnya, dalam bentuk sumber maupun hasil kompilasi (APK), tanpa izin
+   tertulis dari pemilik.
+3. Dilarang memodifikasi, menggabungkan, atau membuat karya turunan dari
+   Perangkat Lunak ini untuk kemudian didistribusikan.
+4. Maskot "Aru" adalah karya orisinal dan tidak boleh dipakai di luar proyek ini.
+5. Perangkat Lunak ini disediakan "SEBAGAIMANA ADANYA", tanpa jaminan apa pun,
+   baik tersurat maupun tersirat. Pemilik tidak bertanggung jawab atas kerusakan
+   atau kehilangan data yang timbul dari penggunaan Perangkat Lunak ini.
+
+PENGECUALIAN — KOMPONEN PIHAK KETIGA
+
+Perangkat Lunak ini memuat atau bergantung pada komponen dan model pihak ketiga
+(mis. Next.js, React, Tailwind CSS, Capacitor, ncnn, model Real-ESRGAN, font
+Plus Jakarta Sans). Setiap komponen tersebut tunduk pada lisensinya masing-masing,
+BUKAN pada lisensi ini. Daftar lengkap beserta lisensinya ada di
+`Docs/THIRD_PARTY.md`. Teks lisensi komponen wajib disertakan di aplikasi
+(Pengaturan → Tentang & lisensi).
+
+====================================================================
+ENGLISH
+====================================================================
+
+This software, including its source code, design assets, the "Aru" mascot,
+documentation, and all supporting files (the "Software"), is the private
+property of Aruthtale and is protected by copyright law.
+
+1. The Software is created for the owner's PERSONAL USE only.
+2. You may not copy, distribute, sell, rent, sublicense, publish, or share the
+   Software, in whole or in part, in source or compiled form (APK), without
+   prior written permission from the owner.
+3. You may not modify, merge, or create derivative works of the Software for
+   distribution.
+4. The "Aru" mascot is an original work and may not be used outside this project.
+5. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED. THE OWNER IS NOT LIABLE FOR ANY DAMAGE OR DATA LOSS ARISING FROM
+   THE USE OF THIS SOFTWARE.
+
+THIRD-PARTY COMPONENTS
+
+The Software includes or depends on third-party components and models (e.g.
+Next.js, React, Tailwind CSS, Capacitor, ncnn, Real-ESRGAN models, the Plus
+Jakarta Sans font). Those components are governed by their own licenses, NOT by
+this license. See `Docs/THIRD_PARTY.md` for the full list and their licenses.
+Their license texts must be shipped inside the app (Settings → About & licenses).

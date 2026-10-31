@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arulume - Foto Terlalu Besar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            bg: '#111214',
+            surface: '#1B1C1F',
+            'surface-2': '#25272B',
+            border: '#2F3136',
+            text: '#F7F6F3',
+            'text-2': '#A4A7AE',
+            accent: '#F5B83D',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #111214;
+      color: #F7F6F3;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+    }
+  </style>
+</head>
+<body class="bg-bg text-text min-h-screen flex flex-col justify-between selection:bg-accent selection:text-[#111214]">
+
+  <!-- Android Status Bar / Top Area -->
+  <header class="w-full pt-3 px-5 flex items-center justify-between z-10 select-none">
+    <!-- Close / Back Button -->
+    <button class="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-text hover:bg-surface-2 active:bg-surface transition-colors duration-150" aria-label="Tutup">
+      <span class="material-symbols-outlined text-[22px]">close</span>
+    </button>
+
+    <!-- Offline Badge indicator subtle -->
+    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface border border-border text-[11px] font-medium text-text-2">
+      <span class="material-symbols-outlined text-[13px] text-accent">flight</span>
+      <span>Offline</span>
+    </div>
+  </header>
+
+  <!-- Main Center Content Area (Centred vertically) -->
+  <main class="flex-1 flex flex-col items-center justify-center px-5 text-center my-auto -mt-6">
+    
+    <!-- Minimalist Cat Mascot (96dp / 96px, solid dark silhouette with curious white eyes and '?' symbol) -->
+    <div class="relative w-24 h-24 mb-6 flex items-center justify-center select-none" aria-hidden="true">
+      <svg class="w-24 h-24 drop-shadow-none" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Body & tail outline silhouette in dark surface / hairline border -->
+        <!-- Cat Tail -->
+        <path d="M60 76C68 76 74 70 74 62C74 54 68 50 63 53C62 53.8 62 55.4 63 56.2C66 58.5 70 60.5 70 63C70 68 65 72 58 72" stroke="#2F3136" stroke-width="2.5" stroke-linecap="round"/>
+        
+        <!-- Cat Body & Head Base (solid surface-2 / surface shape with hairline stroke) -->
+        <ellipse cx="48" cy="67" rx="20" ry="15" fill="#1B1C1F" stroke="#2F3136" stroke-width="1.75"/>
+        
+        <!-- Cat Head -->
+        <circle cx="48" cy="44" r="19" fill="#1B1C1F" stroke="#2F3136" stroke-width="1.75"/>
+        
+        <!-- Left Ear -->
+        <path d="M34 35L30 19C30 19 40 24 43 27" fill="#1B1C1F" stroke="#2F3136" stroke-width="1.75" stroke-linejoin="round"/>
+        <!-- Right Ear (one slightly tilted in confusion) -->
+        <path d="M62 35L68 21C68 21 57 24 53 27" fill="#1B1C1F" stroke="#2F3136" stroke-width="1.75" stroke-linejoin="round"/>
+        
+        <!-- Two Round White Eyes (curious/confused look) -->
+        <circle cx="41.5" cy="42" r="3.2" fill="#F7F6F3"/>
+        <circle cx="54.5" cy="42" r="3.2" fill="#F7F6F3"/>
+        
+        <!-- Subtle Paws at bottom -->
+        <ellipse cx="42" cy="79" rx="5" ry="3.5" fill="#25272B" stroke="#2F3136" stroke-width="1.5"/>
+        <ellipse cx="54" cy="79" rx="5" ry="3.5" fill="#25272B" stroke="#2F3136" stroke-width="1.5"/>
+      </svg>
+
+      <!-- Small '?' question mark symbol beside head in accent amber -->
+      <span class="absolute -top-1 -right-1 text-accent font-bold text-xl font-sans tracking-tight">?</span>
+    </div>
+
+    <!-- Headline (heading 18/600) -->
+    <h1 class="text-[18px] leading-[26px] font-semibold text-text tracking-tight mb-2">
+      Foto ini terlalu besar
+    </h1>
+
+    <!-- Two lines of body text #A4A7AE (body 15) -->
+    <p class="text-[15px] leading-[22px] text-text-2 max-w-[280px]">
+      Foto ini terlalu besar untuk 4x.<br>Coba 2x atau perkecil fotonya.
+    </p>
+
+    <!-- Context Info Chip (Calm, minimal, informs current scale and RAM safety) -->
+    <div class="mt-5 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface border border-border text-[12px] text-text-2">
+      <span class="w-1.5 h-1.5 rounded-full bg-accent"></span>
+      <span>Target skala: <strong class="text-text font-medium">4x Maksimal</strong></span>
+    </div>
+
+  </main>
+
+  <!-- Bottom Action Section (20dp / 20px padding) -->
+  <footer class="w-full px-5 pb-6 pt-2 flex flex-col items-center">
+    
+    <!-- Full-width Amber Primary Button 'Coba lagi' height 56 radius 16 dark text -->
+    <button class="w-full h-14 rounded-2xl bg-accent hover:brightness-105 active:brightness-95 text-[#111214] font-semibold text-[15px] tracking-tight flex items-center justify-center transition-all duration-150 mb-3 shadow-none">
+      Coba lagi
+    </button>
+
+    <!-- Text button 'Ubah pengaturan' in amber -->
+    <button class="w-full py-2.5 rounded-xl text-accent hover:bg-surface-2/40 active:bg-surface-2 text-[15px] font-semibold transition-colors duration-150">
+      Ubah pengaturan
+    </button>
+
+    <!-- Technical code at bottom: caption 12, #A4A7AE -->
+    <div class="mt-4 text-[12px] font-mono tracking-wider text-text-2/80 select-all">
+      E_INPUT_TOO_LARGE
+    </div>
+  </footer>
+
+</body>
+</html>

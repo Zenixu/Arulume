@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Arulume - Memproses Foto</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            bg: '#111214',
+            surface: '#1B1C1F',
+            'surface-2': '#25272B',
+            border: '#2F3136',
+            text: '#F7F6F3',
+            'text-2': '#A4A7AE',
+            accent: '#F5B83D',
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #111214;
+      color: #F7F6F3;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+    }
+  </style>
+</head>
+<body class="bg-bg text-text min-h-screen flex items-center justify-center p-0 m-0">
+<!-- Mobile Screen Container 360x800 portrait simulation -->
+<main class="relative w-full max-w-[360px] h-[800px] overflow-hidden bg-bg flex flex-col justify-between">
+<!-- Background: Heavily dimmed, slightly blurred photo behind dark scrim -->
+<div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+<img alt="Foto yang sedang diproses" class="w-full h-full object-cover filter blur-[6px] scale-105 opacity-30 transform" src="https://lh3.googleusercontent.com/aida/AEtjO1XL5iFnDlKM2SAqp6Aht-Gkhud6BzqJoMz4cZRJEXq9Ga0obmJMQM8sM0VckvCvZldVmujiqKGEW6qIoXY1FlTPpMb8p8MLDrGJlOh4atA8NIXZcx4DTDF_gpN2VsRejljMpKswOyfzBfsh0hx9ID95l0mmGZj4c0sGXf_yORmbWEhSemCK43UNCGlimeCsjuwYKKV_4Ns5LDz2YwQrBlKK1YAZ8QkLiZBLpVx03lxMen3OYoYvlBCm0Jq3"/>
+<!-- Scrim overlay ensuring maximum calm contrast and readability -->
+<div class="absolute inset-0 bg-[#111214]/85 backdrop-filter backdrop-blur-sm"></div>
+</div>
+<!-- Top Status / Bar Minimal (Clean padding 20dp side margin) -->
+<header class="relative z-10 w-full pt-10 px-5 flex items-center justify-between">
+<div class="flex items-center gap-1.5 text-text-2 text-[12px] tracking-wide">
+<span class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse"></span>
+<span>Proses Offline</span>
+</div>
+<span class="text-[12px] text-text-2 tabular-nums">Skala 2x · Seimbang</span>
+</header>
+<!-- Center Content Block -->
+<section class="relative z-10 px-5 w-full flex flex-col my-auto">
+<!-- Upper info line with Cat Mascot placed on the right without overlapping bar -->
+<div class="flex items-end justify-between mb-3.5">
+<div class="flex flex-col">
+<!-- Caption: 12px -->
+<span class="text-[12px] text-text-2 font-medium tracking-wider uppercase mb-1">
+            Memproses
+          </span>
+<!-- Heading: 18px / 600 -->
+<h1 class="text-[18px] font-semibold text-text tracking-tight">
+            Meningkatkan… 62%
+          </h1>
+</div>
+<!-- Solid black calm cat mascot (~56dp / 56px) in thinking posture, no overlap -->
+<div aria-label="Maskot kucing berpikir" class="w-14 h-14 flex items-center justify-end shrink-0">
+<svg class="drop-shadow-none" fill="none" height="52" viewbox="0 0 56 56" width="52" xmlns="http://www.w3.org/2000/svg">
+<!-- Cat Body (Solid deep surface / black silhouette) -->
+<ellipse cx="26" cy="38" fill="#1B1C1F" rx="14" ry="12" stroke="#2F3136" stroke-width="1.5"></ellipse>
+<!-- Tail curled calmly -->
+<path d="M38 42C44 42 46 36 45 31C44 28 42 27 41 29" fill="none" stroke="#2F3136" stroke-linecap="round" stroke-width="2.5"></path>
+<!-- Cat Head -->
+<circle cx="26" cy="22" fill="#1B1C1F" r="11" stroke="#2F3136" stroke-width="1.5"></circle>
+<!-- Left Ear -->
+<polygon fill="#1B1C1F" points="17,17 19,7 25,13" stroke="#2F3136" stroke-linejoin="round" stroke-width="1.5"></polygon>
+<!-- Right Ear -->
+<polygon fill="#1B1C1F" points="27,13 33,7 35,17" stroke="#2F3136" stroke-linejoin="round" stroke-width="1.5"></polygon>
+<!-- Thinking glowing eye pupils (warm amber/white glow dot) -->
+<circle cx="23" cy="21" fill="#F7F6F3" r="1.5"></circle>
+<circle cx="29" cy="21" fill="#F7F6F3" r="1.5"></circle>
+<!-- Tiny thinking spark / amber accent thought dot near whiskers -->
+<circle cx="39" cy="15" fill="#F5B83D" r="1.2"></circle>
+<circle cx="43" cy="11" fill="#F5B83D" r="1.8"></circle>
+</svg>
+</div>
+</div>
+<!-- Progress Bar: height 8px, radius full, track #25272B, filled 62% with #F5B83D -->
+<div aria-valuemax="100" aria-valuemin="0" aria-valuenow="62" class="w-full h-2 bg-surface-2 rounded-full overflow-hidden border border-border/40" role="progressbar">
+<div class="h-full bg-accent rounded-full" style="width: 62%;"></div>
+</div>
+<!-- Caption bottom: 'Sisa ±8 detik' in #A4A7AE, 12px -->
+<div class="mt-2.5 flex justify-between items-center text-[12px] text-text-2">
+<span>Sisa ±8 detik</span>
+</div>
+</section>
+<!-- Bottom Action: Text button 'Batal' in amber #F5B83D only, no filled button, no cards -->
+<footer class="relative z-10 w-full pb-10 px-5 flex flex-col items-center justify-center">
+<button class="text-[15px] font-medium text-accent hover:text-accent/90 active:opacity-75 transition-opacity px-6 py-2.5 outline-none focus:outline-none focus:underline" type="button">
+        Batal
+      </button>
+</footer>
+</main>
+</body>
+</html>

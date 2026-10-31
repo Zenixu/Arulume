@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+
+<html lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Arulume — Beranda</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "bg": "#F7F6F3",
+            "surface": "#FFFFFF",
+            "surface-2": "#EFEDE8",
+            "border": "#E2DFD8",
+            "text": "#111214",
+            "text-2": "#5B5E66",
+            "accent": "#F5B83D",
+            "on-accent": "#111214",
+            "accent-text": "#8E6200",
+            "background": "#F7F6F3",
+            "surface-container": "#FFFFFF",
+            "surface-container-high": "#EFEDE8",
+            "outline": "#E2DFD8",
+            "on-surface": "#111214",
+            "on-surface-variant": "#5B5E66",
+            "primary": "#F5B83D",
+            "on-primary": "#111214"
+          },
+          borderRadius: {
+            "DEFAULT": "0.5rem",
+            "sm": "12px",
+            "md": "16px",
+            "lg": "24px",
+            "xl": "1.5rem",
+            "full": "9999px"
+          },
+          fontFamily: {
+            "headline": ["Plus Jakarta Sans", "sans-serif"],
+            "display": ["Plus Jakarta Sans", "sans-serif"],
+            "body": ["Plus Jakarta Sans", "sans-serif"],
+            "label": ["Plus Jakarta Sans", "sans-serif"]
+          },
+          fontSize: {
+            "title": ["24px", { lineHeight: "32px", fontWeight: "700" }],
+            "heading": ["18px", { lineHeight: "26px", fontWeight: "600" }],
+            "body": ["15px", { lineHeight: "22px", fontWeight: "400" }],
+            "body-medium": ["15px", { lineHeight: "22px", fontWeight: "500" }],
+            "caption": ["12px", { lineHeight: "16px", fontWeight: "500" }]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface flex justify-center items-center min-h-screen p-0 m-0">
+<!-- Mobile Viewport Container (360x800) -->
+<div class="relative w-full max-w-[360px] h-[800px] bg-background border border-outline flex flex-col justify-between overflow-hidden">
+<!-- Top Bar Component from Shared Spec -->
+<header class="w-full h-16 px-5 flex items-center justify-between border-b border-outline bg-background flex-shrink-0 z-10">
+<div class="flex items-center gap-2.5">
+<span class="font-headline font-bold text-title text-on-surface tracking-tight">Arulume</span>
+<!-- Offline Status Pill -->
+<div class="bg-surface-container-high border border-outline rounded-full px-2.5 py-1 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant leading-none" data-icon="airplanemode_active">airplanemode_active</span>
+<span class="font-headline text-caption text-on-surface-variant font-medium leading-none">Offline</span>
+</div>
+</div>
+<!-- Settings Action (48x48 touch target) -->
+<button aria-label="Pengaturan" class="w-12 h-12 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container-high active:opacity-80 transition-colors" type="button">
+<span class="material-symbols-outlined text-[24px] text-on-surface leading-none" data-icon="settings">settings</span>
+</button>
+</header>
+<!-- Content Canvas -->
+<main class="flex-1 px-5 flex flex-col justify-between py-6">
+<!-- Hero Section: Mascot 'Aru' + Tagline -->
+<div class="flex flex-col items-center justify-center flex-1">
+<!-- Mascot Aru SVG (160px height) -->
+<div class="w-[160px] h-[160px] flex items-center justify-center mb-6">
+<svg class="block" fill="none" height="152" viewbox="0 0 140 152" width="140" xmlns="http://www.w3.org/2000/svg">
+<!-- Tail -->
+<path d="M42 128C28 128 16 118 16 102C16 88 26 80 34 80C39.5228 80 44 84.4772 44 90C44 95.5228 39.5228 100 34 100C30 100 28 104 28 108C28 112 34 116 42 116H52V128H42Z" fill="#111214"></path>
+<!-- Body -->
+<path d="M40 144C40 92 50 82 70 82C90 82 100 92 100 144C100 148 96 150 70 150C44 150 40 148 40 144Z" fill="#111214"></path>
+<!-- Head & Pointed Ears -->
+<path d="M40 40L45 10L62 30C64.6 29.5 67.3 29 70 29C72.7 29 75.4 29.5 78 30L95 10L100 40C104 47 106 55 106 63C106 82 90 94 70 94C50 94 34 82 34 63C34 55 36 47 40 40Z" fill="#111214"></path>
+<!-- Eyes (Round pure white) -->
+<circle cx="59" cy="56" fill="#FFFFFF" r="6"></circle>
+<circle cx="81" cy="56" fill="#FFFFFF" r="6"></circle>
+<!-- Tiny pupils -->
+<circle cx="60" cy="56" fill="#111214" r="2.5"></circle>
+<circle cx="82" cy="56" fill="#111214" r="2.5"></circle>
+</svg>
+</div>
+<h1 class="font-headline font-bold text-title text-on-surface text-center tracking-tight">
+          Kembalikan cahaya fotomu
+        </h1>
+<p class="font-headline text-body text-on-surface-variant text-center mt-1.5">
+          Semua diproses di HP. Tanpa unggah.
+        </p>
+</div>
+<!-- Action Cluster -->
+<div class="w-full flex flex-col gap-3 my-4">
+<!-- Primary Button -->
+<button class="w-full h-14 bg-primary text-on-primary rounded-md font-headline font-semibold text-heading flex items-center justify-center active:opacity-80 transition-opacity" type="button">
+          Pilih Foto
+        </button>
+<!-- Secondary Button (Video with badge) -->
+<button class="w-full h-[52px] bg-surface border border-outline rounded-md font-headline font-semibold text-heading text-on-surface flex items-center justify-center gap-2 active:opacity-80 transition-opacity" type="button">
+<span>Pilih Video</span>
+<span class="bg-surface-container-high text-on-surface-variant text-caption font-medium px-2 py-0.5 rounded-full leading-none">
+            Segera
+          </span>
+</button>
+</div>
+<!-- Recent / Empty State Section -->
+<div class="w-full mt-2">
+<div class="flex items-center justify-between mb-2">
+<span class="font-headline text-caption font-semibold tracking-wider text-on-surface-variant uppercase">
+            Terbaru
+          </span>
+</div>
+<!-- Empty Container -->
+<div class="w-full bg-surface border border-outline rounded-lg p-4 flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center flex-shrink-0">
+<!-- Small Peeking Cat Icon -->
+<svg fill="none" height="20" viewbox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg">
+<path d="M6 10L7 4L10 7C10.6 6.8 11.3 6.7 12 6.7C12.7 6.7 13.4 6.8 14 7L17 4L18 10C19 11.5 19.5 13.2 19.5 15C19.5 19.1 16.1 22 12 22C7.9 22 4.5 19.1 4.5 15C4.5 13.2 5 11.5 6 10Z" fill="#111214"></path>
+<circle cx="9.5" cy="14" fill="#FFFFFF" r="1.5"></circle>
+<circle cx="14.5" cy="14" fill="#FFFFFF" r="1.5"></circle>
+</svg>
+</div>
+<span class="font-headline text-caption text-on-surface-variant font-medium">
+            Belum ada cerita
+          </span>
+</div>
+</div>
+</main>
+</div>
+</body></html>

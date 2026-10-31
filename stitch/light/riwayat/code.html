@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+
+<html lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Riwayat - Arulume</title>
+<!-- Google Fonts: Plus Jakarta Sans -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "bg": "#F7F6F3",
+            "surface": "#FFFFFF",
+            "surface-2": "#EFEDE8",
+            "border": "#E2DFD8",
+            "text": "#111214",
+            "text-2": "#5B5E66",
+            "accent": "#F5B83D",
+            "on-accent": "#111214",
+            "accent-text": "#8E6200",
+            "success": "#28784B",
+            "danger": "#BD3B3B",
+            "warning": "#9C5A16"
+          },
+          borderRadius: {
+            "DEFAULT": "0.5rem",
+            "sm": "12px",
+            "md": "16px",
+            "lg": "24px",
+            "full": "9999px"
+          },
+          fontFamily: {
+            headline: ["Plus Jakarta Sans", "sans-serif"],
+            display: ["Plus Jakarta Sans", "sans-serif"],
+            body: ["Plus Jakarta Sans", "sans-serif"],
+            label: ["Plus Jakarta Sans", "sans-serif"]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+      font-size: 22px;
+      line-height: 1;
+      display: inline-block;
+    }
+    .material-symbols-outlined.fill-icon {
+      font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    /* Disable default touch highlighting & clean taps */
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+  </style>
+</head>
+<body class="bg-bg text-text font-body antialiased flex justify-center min-h-screen selection:bg-accent selection:text-text">
+<!-- Mobile Screen Frame (360x800 canonical portrait envelope) -->
+<main class="w-full max-w-[360px] min-h-screen bg-bg flex flex-col relative border-x border-border">
+<!-- Top App Bar (Shared Components standard: small header, hairline bottom separation, flat elevation) -->
+<header class="sticky top-0 z-40 bg-surface border-b border-border flex items-center justify-between px-5 h-14 w-full">
+<div class="flex items-center gap-2">
+<button aria-label="Kembali" class="w-10 h-10 -ml-2.5 flex items-center justify-center rounded-full hover:bg-surface-2 active:opacity-80 transition-colors text-text" type="button">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h1 class="font-headline text-[18px] leading-[26px] font-semibold text-text">Riwayat</h1>
+</div>
+<button class="text-[15px] font-semibold text-accent-text hover:text-text transition-colors px-1 py-1.5 active:opacity-75" type="button">
+        Batal
+      </button>
+</header>
+<!-- Content Area: History Grid (2 columns, 20dp lateral padding, calm flat spacing) -->
+<section class="flex-1 px-5 pt-4 pb-24 overflow-y-auto">
+<div class="flex items-center justify-between pb-3.5">
+<span class="text-[12px] font-medium leading-[16px] text-text-2 tracking-wide">6 FOTO TERSIMPAN</span>
+<span class="text-[12px] font-medium leading-[16px] text-text-2">Bulan Ini</span>
+</div>
+<!-- 2-Column Bento Grid of Restored Photographs -->
+<div class="grid grid-cols-2 gap-3.5">
+<!-- Card 1 (Default unselected) -->
+<div class="bg-surface rounded-md border border-border overflow-hidden flex flex-col relative group cursor-pointer transition-colors hover:border-text-2">
+<div class="relative aspect-square w-full bg-surface-2 overflow-hidden">
+<img alt="Foto keluarga vintage bernuansa monokromatik lembut" class="w-full h-full object-cover object-center" src="https://lh3.googleusercontent.com/aida/AEtjO1XGA4oLo-lfv_TWKBcYbB4A3CxblToByq_8B-m82zbucbakV1okgsjgIpfZGHNs02_hKhBdOfUS-fnf9f3uPoaVJcdl6qKF2N8OjY7BxlGRdDmj2uLUuVloijqpbbbQc-zrBCUMfBuVPXhhYyLDuslbJEjwng1r8ABvFeBDmJpK5QvzA8E0OAqYcPZfR8d0BkD77OSSiID0eFCAyDaWrtmW3FQJLwf3wRcAcZHTKm_912pviLrgBzo76huO"/>
+<!-- Empty Selection Ring indicator -->
+<div class="absolute top-2 right-2 w-5 h-5 rounded-full border border-surface bg-text/20 backdrop-blur-none flex items-center justify-center">
+</div>
+</div>
+<div class="p-2.5 flex items-center justify-between bg-surface border-t border-border">
+<span class="text-[12px] leading-[16px] font-medium text-text-2">31 Okt</span>
+<span class="text-[11px] leading-tight font-medium bg-surface-2 text-text-2 px-2 py-0.5 rounded-full">2x</span>
+</div>
+</div>
+<!-- Card 2 (ACTIVE SELECTED STATE: 2px Amber Border & Accent Badge) -->
+<div class="bg-surface rounded-md border-2 border-accent overflow-hidden flex flex-col relative group cursor-pointer">
+<div class="relative aspect-square w-full bg-surface-2 overflow-hidden">
+<img alt="Foto vintage keluarga berpose bersama di pekarangan rumah" class="w-full h-full object-cover object-center" src="https://lh3.googleusercontent.com/aida/AEtjO1XGA4oLo-lfv_TWKBcYbB4A3CxblToByq_8B-m82zbucbakV1okgsjgIpfZGHNs02_hKhBdOfUS-fnf9f3uPoaVJcdl6qKF2N8OjY7BxlGRdDmj2uLUuVloijqpbbbQc-zrBCUMfBuVPXhhYyLDuslbJEjwng1r8ABvFeBDmJpK5QvzA8E0OAqYcPZfR8d0BkD77OSSiID0eFCAyDaWrtmW3FQJLwf3wRcAcZHTKm_912pviLrgBzo76huO"/>
+<!-- Active Amber Check Circle Badge -->
+<div class="absolute top-2 right-2 w-5 h-5 rounded-full bg-accent flex items-center justify-center text-on-accent">
+<span class="material-symbols-outlined fill-icon text-[14px] font-bold">check</span>
+</div>
+</div>
+<div class="p-2.5 flex items-center justify-between bg-surface border-t border-border">
+<span class="text-[12px] leading-[16px] font-semibold text-text">30 Okt</span>
+<span class="text-[11px] leading-tight font-semibold bg-accent text-on-accent px-2 py-0.5 rounded-full">4x</span>
+</div>
+</div>
+<!-- Card 3 (Unselected) -->
+<div class="bg-surface rounded-md border border-border overflow-hidden flex flex-col relative group cursor-pointer transition-colors hover:border-text-2">
+<div class="relative aspect-square w-full bg-surface-2 overflow-hidden">
+<img alt="Detail potret keluarga bernuansa klasik hangat" class="w-full h-full object-cover object-[30%_center]" src="https://lh3.googleusercontent.com/aida/AEtjO1XGA4oLo-lfv_TWKBcYbB4A3CxblToByq_8B-m82zbucbakV1okgsjgIpfZGHNs02_hKhBdOfUS-fnf9f3uPoaVJcdl6qKF2N8OjY7BxlGRdDmj2uLUuVloijqpbbbQc-zrBCUMfBuVPXhhYyLDuslbJEjwng1r8ABvFeBDmJpK5QvzA8E0OAqYcPZfR8d0BkD77OSSiID0eFCAyDaWrtmW3FQJLwf3wRcAcZHTKm_912pviLrgBzo76huO"/>
+<div class="absolute top-2 right-2 w-5 h-5 rounded-full border border-surface bg-text/20 backdrop-blur-none flex items-center justify-center">
+</div>
+</div>
+<div class="p-2.5 flex items-center justify-between bg-surface border-t border-border">
+<span class="text-[12px] leading-[16px] font-medium text-text-2">28 Okt</span>
+<span class="text-[11px] leading-tight font-medium bg-surface-2 text-text-2 px-2 py-0.5 rounded-full">2x</span>
+</div>
+</div>
+<!-- Card 4 (Unselected) -->
+<div class="bg-surface rounded-md border border-border overflow-hidden flex flex-col relative group cursor-pointer transition-colors hover:border-text-2">
+<div class="relative aspect-square w-full bg-surface-2 overflow-hidden">
+<img alt="Dokumentasi foto nostalgia keluarga generasi terdahulu" class="w-full h-full object-cover object-[70%_center]" src="https://lh3.googleusercontent.com/aida/AEtjO1XGA4oLo-lfv_TWKBcYbB4A3CxblToByq_8B-m82zbucbakV1okgsjgIpfZGHNs02_hKhBdOfUS-fnf9f3uPoaVJcdl6qKF2N8OjY7BxlGRdDmj2uLUuVloijqpbbbQc-zrBCUMfBuVPXhhYyLDuslbJEjwng1r8ABvFeBDmJpK5QvzA8E0OAqYcPZfR8d0BkD77OSSiID0eFCAyDaWrtmW3FQJLwf3wRcAcZHTKm_912pviLrgBzo76huO"/>
+<div class="absolute top-2 right-2 w-5 h-5 rounded-full border border-surface bg-text/20 backdrop-blur-none flex items-center justify-center">
+</div>
+</div>
+<div class="p-2.5 flex items-center justify-between bg-surface border-t border-border">
+<span class="text-[12px] leading-[16px] font-medium text-text-2">25 Okt</span>
+<span class="text-[11px] leading-tight font-medium bg-surface-2 text-text-2 px-2 py-0.5 rounded-full">3x</span>
+</div>
+</div>
+<!-- Card 5 (Unselected) -->
+<div class="bg-surface rounded-md border border-border overflow-hidden flex flex-col relative group cursor-pointer transition-colors hover:border-text-2">
+<div class="relative aspect-square w-full bg-surface-2 overflow-hidden">
+<img alt="Foto potret kenangan lama beresolusi tajam" class="w-full h-full object-cover object-top" src="https://lh3.googleusercontent.com/aida/AEtjO1XGA4oLo-lfv_TWKBcYbB4A3CxblToByq_8B-m82zbucbakV1okgsjgIpfZGHNs02_hKhBdOfUS-fnf9f3uPoaVJcdl6qKF2N8OjY7BxlGRdDmj2uLUuVloijqpbbbQc-zrBCUMfBuVPXhhYyLDuslbJEjwng1r8ABvFeBDmJpK5QvzA8E0OAqYcPZfR8d0BkD77OSSiID0eFCAyDaWrtmW3FQJLwf3wRcAcZHTKm_912pviLrgBzo76huO"/>
+<div class="absolute top-2 right-2 w-5 h-5 rounded-full border border-surface bg-text/20 backdrop-blur-none flex items-center justify-center">
+</div>
+</div>
+<div class="p-2.5 flex items-center justify-between bg-surface border-t border-border">
+<span class="text-[12px] leading-[16px] font-medium text-text-2">22 Okt</span>
+<span class="text-[11px] leading-tight font-medium bg-surface-2 text-text-2 px-2 py-0.5 rounded-full">2x</span>
+</div>
+</div>
+<!-- Card 6 (Unselected) -->
+<div class="bg-surface rounded-md border border-border overflow-hidden flex flex-col relative group cursor-pointer transition-colors hover:border-text-2">
+<div class="relative aspect-square w-full bg-surface-2 overflow-hidden">
+<img alt="Foto potret keluarga vintage hasil restorasi Arulume" class="w-full h-full object-cover object-[50%_40%]" src="https://lh3.googleusercontent.com/aida/AEtjO1XGA4oLo-lfv_TWKBcYbB4A3CxblToByq_8B-m82zbucbakV1okgsjgIpfZGHNs02_hKhBdOfUS-fnf9f3uPoaVJcdl6qKF2N8OjY7BxlGRdDmj2uLUuVloijqpbbbQc-zrBCUMfBuVPXhhYyLDuslbJEjwng1r8ABvFeBDmJpK5QvzA8E0OAqYcPZfR8d0BkD77OSSiID0eFCAyDaWrtmW3FQJLwf3wRcAcZHTKm_912pviLrgBzo76huO"/>
+<div class="absolute top-2 right-2 w-5 h-5 rounded-full border border-surface bg-text/20 backdrop-blur-none flex items-center justify-center">
+</div>
+</div>
+<div class="p-2.5 flex items-center justify-between bg-surface border-t border-border">
+<span class="text-[12px] leading-[16px] font-medium text-text-2">18 Okt</span>
+<span class="text-[11px] leading-tight font-medium bg-surface-2 text-text-2 px-2 py-0.5 rounded-full">4x</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Bottom Selection Action Bar (Pinned, Flat white, Hairline top border, No Shadow) -->
+<footer class="fixed bottom-0 w-full max-w-[360px] bg-surface border-t border-border px-5 py-3.5 flex items-center justify-between z-50">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-accent inline-block"></span>
+<span class="text-[15px] font-medium leading-[22px] text-text">1 foto dipilih</span>
+</div>
+<div class="flex items-center gap-3">
+<!-- Secondary utility icon action: Share -->
+<button aria-label="Bagikan foto" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-2 text-text-2 transition-colors active:opacity-75" type="button">
+<span class="material-symbols-outlined">share</span>
+</button>
+<!-- Primary Action: Hapus (Danger token) -->
+<button class="h-10 px-4 flex items-center justify-center gap-1.5 rounded-md text-danger hover:bg-surface-2 active:opacity-75 transition-colors font-semibold text-[15px] leading-[22px]" type="button">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+<span>Hapus</span>
+</button>
+</div>
+</footer>
+</main>
+</body></html>

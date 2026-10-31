@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Arulume - Hasil</title>
+<!-- Google Fonts: Plus Jakarta Sans -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS v3 -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            bg: '#111214',
+            surface: '#1B1C1F',
+            'surface-2': '#25272B',
+            border: '#2F3136',
+            text: '#F7F6F3',
+            'text-2': '#A4A7AE',
+            accent: '#F5B83D',
+            'on-accent': '#111214',
+            'accent-text': '#F5B83D',
+            success: '#6FCF97',
+            danger: '#FF6B6B',
+            warning: '#F2994A',
+            // Material 3 aliases
+            background: '#111214',
+            'surface-container': '#1B1C1F',
+            'surface-container-high': '#25272B',
+            'surface-container-highest': '#2F3136',
+            'outline': '#2F3136',
+            'on-surface': '#F7F6F3',
+            'on-surface-variant': '#A4A7AE',
+            primary: '#F5B83D',
+            'on-primary': '#111214'
+          },
+          borderRadius: {
+            'DEFAULT': '0.5rem',
+            'sm': '12px',
+            'md': '16px',
+            'lg': '24px',
+            'xl': '1.5rem',
+            'full': '9999px'
+          },
+          fontFamily: {
+            headline: ['Plus Jakarta Sans', 'sans-serif'],
+            display: ['Plus Jakarta Sans', 'sans-serif'],
+            body: ['Plus Jakarta Sans', 'sans-serif'],
+            label: ['Plus Jakarta Sans', 'sans-serif']
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      background-color: #111214;
+      color: #F7F6F3;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+      font-size: 24px;
+      line-height: 1;
+      display: inline-block;
+    }
+
+    /* Range slider custom reset */
+    input[type=range] {
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 48px;
+      height: 48px;
+      background: transparent;
+      cursor: ew-resize;
+    }
+    input[type=range]::-moz-range-thumb {
+      width: 48px;
+      height: 48px;
+      background: transparent;
+      cursor: ew-resize;
+      border: none;
+    }
+  </style>
+</head>
+<body class="bg-bg text-text min-h-screen flex justify-center items-start antialiased">
+<!-- Mobile Container strictly designed for 360x800 viewport standard -->
+<main class="w-full max-w-[390px] min-h-screen bg-bg flex flex-col justify-between relative overflow-hidden pb-6">
+<!-- Screen Content Wrapper -->
+<div class="flex flex-col w-full">
+<!-- 1. Top Bar (Task-focused screen: back button + heading 'Hasil') -->
+<header class="w-full flex items-center justify-between px-5 pt-4 pb-3 border-b border-border">
+<button aria-label="Kembali" class="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-text hover:bg-surface-2 transition-colors active:opacity-80" type="button">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-headline text-[18px] leading-[26px] font-semibold text-text tracking-normal text-center">Hasil</h1>
+<div class="w-10 h-10 -mr-2 flex items-center justify-center">
+<button aria-label="Informasi" class="w-10 h-10 rounded-full flex items-center justify-center text-text-2 hover:bg-surface-2 transition-colors active:opacity-80" type="button">
+<span class="material-symbols-outlined" data-icon="info">info</span>
+</button>
+</div>
+</header>
+<!-- 2. Hero Before/After Comparison Area (~65-70% visual focus) -->
+<div class="px-5 pt-3.5 pb-2 w-full">
+<div class="relative w-full aspect-[4/5] max-h-[480px] rounded-[16px] overflow-hidden bg-surface border border-border select-none" id="comparison-card">
+<!-- Right: After ("Hasil") Crisp / Enhanced layer -->
+<div class="absolute inset-0 w-full h-full overflow-hidden">
+<img alt="Enhanced family photo" class="w-full h-full object-cover select-none pointer-events-none" id="image-after" src="https://lh3.googleusercontent.com/aida/AEtjO1XL5iFnDlKM2SAqp6Aht-Gkhud6BzqJoMz4cZRJEXq9Ga0obmJMQM8sM0VckvCvZldVmujiqKGEW6qIoXY1FlTPpMb8p8MLDrGJlOh4atA8NIXZcx4DTDF_gpN2VsRejljMpKswOyfzBfsh0hx9ID95l0mmGZj4c0sGXf_yORmbWEhSemCK43UNCGlimeCsjuwYKKV_4Ns5LDz2YwQrBlKK1YAZ8QkLiZBLpVx03lxMen3OYoYvlBCm0Jq3"/>
+</div>
+<!-- Left: Before ("Asli") Original vintage layer with clip-path -->
+<div class="absolute inset-0 w-full h-full overflow-hidden will-change-[clip-path]" id="before-clipper" style="clip-path: inset(0 50% 0 0);">
+<img alt="Original vintage family photo" class="w-full h-full object-cover select-none pointer-events-none filter blur-[0.4px] contrast-[0.92] brightness-[0.97]" id="image-before" src="https://lh3.googleusercontent.com/aida/AEtjO1XL5iFnDlKM2SAqp6Aht-Gkhud6BzqJoMz4cZRJEXq9Ga0obmJMQM8sM0VckvCvZldVmujiqKGEW6qIoXY1FlTPpMb8p8MLDrGJlOh4atA8NIXZcx4DTDF_gpN2VsRejljMpKswOyfzBfsh0hx9ID95l0mmGZj4c0sGXf_yORmbWEhSemCK43UNCGlimeCsjuwYKKV_4Ns5LDz2YwQrBlKK1YAZ8QkLiZBLpVx03lxMen3OYoYvlBCm0Jq3"/>
+</div>
+<!-- Divider Line (Amber #F5B83D, 2px) -->
+<div class="absolute top-0 bottom-0 w-[2px] bg-accent -translate-x-1/2 pointer-events-none z-20" id="slider-divider" style="left: 50%;">
+<!-- Center circular draggable handle (40px) -->
+<div class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 left-[1px] w-10 h-10 rounded-full bg-surface border-2 border-accent flex items-center justify-center text-text pointer-events-auto shadow-none">
+<div class="flex items-center justify-center space-x-[2px] text-accent">
+<span class="material-symbols-outlined text-[15px]" data-icon="chevron_left" style="font-size: 15px;">chevron_left</span>
+<span class="material-symbols-outlined text-[15px]" data-icon="chevron_right" style="font-size: 15px;">chevron_right</span>
+</div>
+</div>
+</div>
+<!-- Badge Overlay: "Asli" (Bottom Left) -->
+<div class="absolute bottom-3 left-3 z-10 pointer-events-none">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full bg-bg/80 border border-border text-[12px] leading-[16px] font-medium text-text-2">
+              Asli
+            </span>
+</div>
+<!-- Badge Overlay: "Hasil" (Bottom Right) -->
+<div class="absolute bottom-3 right-3 z-10 pointer-events-none">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full bg-bg/80 border border-border text-[12px] leading-[16px] font-medium text-accent">
+              Hasil
+            </span>
+</div>
+<!-- Draggable invisible range slider overlay -->
+<input aria-label="Penggeser sebelum dan sesudah" class="absolute inset-0 w-full h-full opacity-0 z-30 cursor-ew-resize" id="slider-input" max="100" min="0" type="range" value="50"/>
+</div>
+</div>
+<!-- 3. Metadata & Status Row -->
+<div class="px-5 py-2 flex flex-col space-y-1">
+<div class="flex items-center justify-between">
+<!-- Status: Tersimpan di Galeri -->
+<div class="flex items-center space-x-1.5">
+<span class="material-symbols-outlined text-success text-[18px]" data-icon="check_circle" style="font-size: 18px;">check_circle</span>
+<span class="text-[14px] leading-[20px] font-medium text-text">Tersimpan di Galeri</span>
+</div>
+<!-- Tech specs / caption line -->
+<span class="text-[12px] leading-[16px] font-medium text-text-2">
+            2000 × 2000 · 14 detik
+          </span>
+</div>
+</div>
+</div>
+<!-- 4. Actions Section (Always clean, adhering to canonical Arulume design system) -->
+<div class="px-5 flex flex-col space-y-3 pt-2 w-full">
+<!-- Secondary Buttons Row (50 / 50) -->
+<div class="grid grid-cols-2 gap-3 w-full">
+<!-- Bagikan -->
+<button class="h-12 rounded-[16px] bg-surface border border-border text-text font-medium text-[15px] leading-[22px] flex items-center justify-center space-x-2 hover:bg-surface-2 active:bg-surface-2 transition-colors duration-150" type="button">
+<span class="material-symbols-outlined text-[20px]" data-icon="share" style="font-size: 20px;">share</span>
+<span>Bagikan</span>
+</button>
+<!-- Buka di Galeri -->
+<button class="h-12 rounded-[16px] bg-surface border border-border text-text font-medium text-[15px] leading-[22px] flex items-center justify-center space-x-2 hover:bg-surface-2 active:bg-surface-2 transition-colors duration-150" type="button">
+<span class="material-symbols-outlined text-[20px]" data-icon="photo_library" style="font-size: 20px;">photo_library</span>
+<span>Buka Galeri</span>
+</button>
+</div>
+<!-- Text Button: Tingkatkan Lagi -->
+<button class="w-full py-2.5 text-center text-accent font-medium text-[15px] leading-[22px] hover:text-accent/90 active:opacity-75 transition-opacity" type="button">
+        Tingkatkan Lagi
+      </button>
+<!-- Single Primary Action per screen: Selesai (Amber #F5B83D, 56px height, Dark #111214 text) -->
+<button class="w-full h-14 rounded-[16px] bg-accent text-on-accent font-semibold text-[16px] leading-[24px] flex items-center justify-center active:opacity-90 transition-opacity" type="button">
+        Selesai
+      </button>
+</div>
+</main>
+<!-- Interactive Comparison Slider Logic -->
+<script>
+    const sliderInput = document.getElementById('slider-input');
+    const beforeClipper = document.getElementById('before-clipper');
+    const sliderDivider = document.getElementById('slider-divider');
+
+    if (sliderInput && beforeClipper && sliderDivider) {
+      const updateSlider = (val) => {
+        const percentage = Math.max(0, Math.min(100, val));
+        // Clip from right side by (100 - percentage)%
+        beforeClipper.style.clipPath = `inset(0 ${100 - percentage}% 0 0)`;
+        sliderDivider.style.left = `${percentage}%`;
+      };
+
+      sliderInput.addEventListener('input', (e) => {
+        updateSlider(e.target.value);
+      });
+
+      // Initial setup
+      updateSlider(sliderInput.value);
+    }
+  </script>
+</body></html>

@@ -1,0 +1,140 @@
+{
+  "project": "16084830281983020534",
+  "dark": [
+    {
+      "label": "01 Beranda",
+      "id": "96586901f45b4df798ba959aa147254b",
+      "title": "Arulume - Beranda",
+      "imageUrl": "https://stitch.googleapis.com/v1/projects/16084830281983020534/files/7b504f3f410c44149a85748d956a786f:download",
+      "htmlUrl": "https://stitch.googleapis.com/v1/projects/16084830281983020534/files/a6ce40757d52442c92368a3cb53f8396:download",
+      "canvasUrl": "https://stitch.google.com/projects/16084830281983020534?node-id=96586901f45b4df798ba959aa147254b"
+    },
+    {
+      "label": "02 Editor",
+      "id": "cf519e4f5960402ba2b218b16fdac353",
+      "title": "Arulume - Atur Peningkatan",
+      "imageUrl": "https://stitch.googleapis.com/v1/projects/16084830281983020534/files/e4171152b37c4cc8a6f4ff31bde89dfc:download",
+      "htmlUrl": "https://stitch.googleapis.com/v1/projects/16084830281983020534/files/7763199b1e9a4690ae622492916b27c6:download",
+      "canvasUrl": "https://stitch.google.com/projects/16084830281983020534?node-id=cf519e4f5960402ba2b218b16fdac353"
+    },
+    {
+      "label": "03 Memproses",
+      "id": "f9a72f24308b4cb99d163f129832e854",
+      "title": "Arulume - Memproses Foto (Pembaruan Status)",
+      "imageUrl": "https://stitch.googleapis.com/v1/projects/16084830281983020534/files/02614d43986d45f787101db9ad7eb36a:download",
+      "htmlUrl": "https://stitch.googleapis.com/v1/projects/16084830281983020534/files/42d1e829ab5a48b7bfeffc80fe2d4868:download",
+      "canvasUrl": "https://stitch.google.com/projects/16084830281983020534?node-id=f9a72f24308b4cb99d163f129832e854",
+      "supersededBy": "f9a72f24308b4cb99d163f129832e854"
+    },
+    {
+      "label": "04 Hasil",
+      "id": "9f795dd0b16b426a9ac1f1c433c1e643",
+      "title": "Arulume - Hasil",
+      "imageUrl": "https://stitch.googleapis.com/v1/projects/16084830281983020534/files/8f8fcef4e66e4f57898dc46da3550edd:download",
+      "htmlUrl": "https://stitch.googleapis.com/v1/projects/16084830281983020534/files/39ec0c1b6a884a7f870c8964e0c6a6cf:download",
+      "canvasUrl": "https://stitch.google.com/projects/16084830281983020534?node-id=9f795dd0b16b426a9ac1f1c433c1e643"
+    },
+    {
+      "label": "05 Riwayat",
+      "id": "d858b26e16ec4053afb3295e545fd3b1",
+      "title": "Arulume - Riwayat",
+      "imageUrl": "https://stitch.googleapis.com/v1/projects/16084830281983020534/files/eaa812b100e44c51a13e481a37707744:download",
+      "htmlUrl": "https://stitch.googleapis.com/v1/projects/16084830281983020534/files/3799aa8a4d5547438c21a65f3fc168ee:download",
+      "canvasUrl": "https://stitch.google.com/projects/16084830281983020534?node-id=d858b26e16ec4053afb3295e545fd3b1"
+    },
+    {
+      "label": "06 Pengaturan",
+      "id": "f710fce9f50147958e56b52de05dedf3",
+      "title": "Arulume - Pengaturan (Tanpa Navigasi Bawah)",
+      "imageUrl": "https://stitch.googleapis.com/v1/projects/16084830281983020534/files/8710d43e33a047609ceee2d622630927:download",
+      "htmlUrl": "https://stitch.googleapis.com/v1/projects/16084830281983020534/files/0b2de1c445d24822a4d02ed12e57cae2:download",
+      "canvasUrl": "https://stitch.google.com/projects/16084830281983020534?node-id=f710fce9f50147958e56b52de05dedf3",
+      "supersededBy": "f710fce9f50147958e56b52de05dedf3"
+    },
+    {
+      "label": "07 Error",
+      "id": "da5b558b079f4676adfd8b3fc884eae9",
+      "title": "Arulume - Error Foto Terlalu Besar",
+      "imageUrl": "https://stitch.googleapis.com/v1/projects/16084830281983020534/files/4afa8b1eb88c4645b941b85f3ce88ace:download",
+      "htmlUrl": "https://stitch.googleapis.com/v1/projects/16084830281983020534/files/c23bac97e8db4057bcfd97b58679e6bf:download",
+      "canvasUrl": "https://stitch.google.com/projects/16084830281983020534?node-id=da5b558b079f4676adfd8b3fc884eae9"
+    },
+    {
+      "label": "08 Onboarding",
+      "id": "5c181cf15f544b3fb485c84ed6ad1b40",
+      "title": "Arulume - Onboarding",
+      "imageUrl": "https://stitch.googleapis.com/v1/projects/16084830281983020534/files/5eec0dd957a4475093d1c5ee79be9f9e:download",
+      "htmlUrl": "https://stitch.googleapis.com/v1/projects/16084830281983020534/files/33884a1229504248b72ba041788bb7af:download",
+      "canvasUrl": "https://stitch.google.com/projects/16084830281983020534?node-id=5c181cf15f544b3fb485c84ed6ad1b40"
+    }
+  ],
+  "light": [
+    {
+      "label": "01 Beranda",
+      "id": "b4650f906d8a4b04abd99cc2a7a79e7a",
+      "title": "Arulume Home",
+      "imageUrl": "https://stitch.googleapis.com/v1/projects/13677577835905979214/files/96c1281219194c8295e28207b58a0b95:download",
+      "htmlUrl": "https://stitch.googleapis.com/v1/projects/13677577835905979214/files/a514906bfae94d14b127c956373d195e:download",
+      "canvasUrl": "https://stitch.google.com/projects/13677577835905979214?node-id=b4650f906d8a4b04abd99cc2a7a79e7a"
+    },
+    {
+      "label": "02 Editor",
+      "id": "55ec2602f6f14c9f80e496ad07128aca",
+      "title": "Atur Peningkatan",
+      "imageUrl": "https://stitch.googleapis.com/v1/projects/13677577835905979214/files/05233ce6632242db86af95d60d79834b:download",
+      "htmlUrl": "https://stitch.googleapis.com/v1/projects/13677577835905979214/files/f07a458224f14e0fb219b6edcb9a8a63:download",
+      "canvasUrl": "https://stitch.google.com/projects/13677577835905979214?node-id=55ec2602f6f14c9f80e496ad07128aca"
+    },
+    {
+      "label": "03 Memproses",
+      "id": "8f8a5d5a1f0c40358efdb310d20d28c8",
+      "title": "Memproses",
+      "imageUrl": "https://stitch.googleapis.com/v1/projects/13677577835905979214/files/b9e7be8607cd4560824aaa677b076e5c:download",
+      "htmlUrl": "https://stitch.googleapis.com/v1/projects/13677577835905979214/files/5f32b2beb0f847969b8458085af78947:download",
+      "canvasUrl": "https://stitch.google.com/projects/13677577835905979214?node-id=8f8a5d5a1f0c40358efdb310d20d28c8"
+    },
+    {
+      "label": "04 Hasil",
+      "id": "b0d45b1c3e8143b78ae640cce34981a8",
+      "title": "Hasil - Arulume",
+      "imageUrl": "https://stitch.googleapis.com/v1/projects/13677577835905979214/files/ee84d08ba420415e9aa5247b472745ce:download",
+      "htmlUrl": "https://stitch.googleapis.com/v1/projects/13677577835905979214/files/1d1ba1f7b18a4a69b5d6a4652a51c9f9:download",
+      "canvasUrl": "https://stitch.google.com/projects/13677577835905979214?node-id=b0d45b1c3e8143b78ae640cce34981a8"
+    },
+    {
+      "label": "05 Riwayat",
+      "id": "6c26785992514b41a48fe3046cb69b8e",
+      "title": "Riwayat - Arulume",
+      "imageUrl": "https://stitch.googleapis.com/v1/projects/13677577835905979214/files/c46e0196a74844b9b75d478c4e97fca6:download",
+      "htmlUrl": "https://stitch.googleapis.com/v1/projects/13677577835905979214/files/f097b0fa11d94b6e86664d0096af0f91:download",
+      "canvasUrl": "https://stitch.google.com/projects/13677577835905979214?node-id=6c26785992514b41a48fe3046cb69b8e"
+    },
+    {
+      "label": "06 Pengaturan",
+      "id": "554fc7a05a754d7c89fbd1db1207729a",
+      "title": "Pengaturan - Arulume",
+      "imageUrl": "https://stitch.googleapis.com/v1/projects/13677577835905979214/files/53ef985dd6e541d3bc0c2d77c2e9f6cf:download",
+      "htmlUrl": "https://stitch.googleapis.com/v1/projects/13677577835905979214/files/b936cab60bed42dcaec641ea86fca52e:download",
+      "canvasUrl": "https://stitch.google.com/projects/13677577835905979214?node-id=554fc7a05a754d7c89fbd1db1207729a"
+    },
+    {
+      "label": "07 Error",
+      "id": "4eda76109b5b4193baec6feebce17ab6",
+      "title": "Error Terlalu Besar - Arulume",
+      "imageUrl": "https://stitch.googleapis.com/v1/projects/13677577835905979214/files/f49bc089fc9f45d996e12395dbcd7ec8:download",
+      "htmlUrl": "https://stitch.googleapis.com/v1/projects/13677577835905979214/files/06290205bf7440e09db743672830b292:download",
+      "canvasUrl": "https://stitch.google.com/projects/13677577835905979214?node-id=4eda76109b5b4193baec6feebce17ab6"
+    },
+    {
+      "label": "08 Onboarding",
+      "id": "467263be03cf40e691765ae4e8ee955e",
+      "title": "Onboarding 1 - Arulume",
+      "imageUrl": "https://stitch.googleapis.com/v1/projects/13677577835905979214/files/8d303b7f95b341238e760452f5a64bb9:download",
+      "htmlUrl": "https://stitch.googleapis.com/v1/projects/13677577835905979214/files/fb534249063c48a8b33930794b8ee291:download",
+      "canvasUrl": "https://stitch.google.com/projects/13677577835905979214?node-id=467263be03cf40e691765ae4e8ee955e"
+    }
+  ],
+  "projectLight": "13677577835905979214",
+  "renderedLocally": "PNG 780x1768 dari code.html (headless Chromium, 390x884 @2x)",
+  "updated": "2026-10-31"
+}

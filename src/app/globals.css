@@ -1,0 +1,130 @@
+@import "tailwindcss";
+
+/*
+ * Token Arulume — sumber kebenaran: Docs/design.md bagian 3.
+ * Nilai di file ini HARUS sama dengan tabel di dokumen itu.
+ * Mode gelap adalah default; mode terang lewat [data-theme="light"].
+ */
+
+:root,
+[data-theme="dark"] {
+  --bg: #111214;
+  --surface: #1b1c1f;
+  --surface-2: #25272b;
+  --border: #2f3136;
+  --text: #f7f6f3;
+  --text-2: #a4a7ae;
+  --accent: #f5b83d;
+  --on-accent: #111214;
+  --accent-text: #f5b83d;
+  --success: #6fcf97;
+  --danger: #ff6b6b;
+  --warning: #f2994a;
+}
+
+[data-theme="light"] {
+  --bg: #f7f6f3;
+  --surface: #ffffff;
+  --surface-2: #efede8;
+  --border: #e2dfd8;
+  --text: #111214;
+  --text-2: #5b5e66;
+  --accent: #f5b83d;
+  --on-accent: #111214;
+  --accent-text: #8e6200;
+  --success: #28784b;
+  --danger: #bd3b3b;
+  --warning: #9c5a16;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-text-2: var(--text-2);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-accent-text: var(--accent-text);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+
+  --font-sans: var(--font-jakarta), system-ui, sans-serif;
+
+  /* Empat gaya teks saja (design.md bagian 3.2) */
+  --text-title: 24px;
+  --text-title--line-height: 32px;
+  --text-title--font-weight: 700;
+  --text-heading: 18px;
+  --text-heading--line-height: 26px;
+  --text-heading--font-weight: 600;
+  --text-body: 15px;
+  --text-body--line-height: 22px;
+  --text-body--font-weight: 400;
+  --text-caption: 12px;
+  --text-caption--line-height: 16px;
+  --text-caption--font-weight: 500;
+
+  /* Radius: 12 / 16 / 24 (design.md bagian 3.3) */
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+}
+
+@layer base {
+  html {
+    background-color: var(--bg);
+    color: var(--text);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    /* safe area status bar & gesture bar (design.md bagian 10) */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    overscroll-behavior: none;
+  }
+
+  input,
+  textarea {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+/* Animasi maskot: ringan, dan mati kalau sistem minta kurangi gerakan (design.md bagian 4) */
+@keyframes mascot-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.mascot-float {
+  animation: mascot-float 3.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mascot-float {
+    animation: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

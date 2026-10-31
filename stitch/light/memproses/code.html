@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+
+<html lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Memproses - Arulume</title>
+<!-- Google Fonts: Plus Jakarta Sans -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "bg": "#F7F6F3",
+            "surface": "#FFFFFF",
+            "surface-2": "#EFEDE8",
+            "border": "#E2DFD8",
+            "text": "#111214",
+            "text-2": "#5B5E66",
+            "accent": "#F5B83D",
+            "on-accent": "#111214",
+            "accent-text": "#8E6200",
+            "success": "#28784B",
+            "danger": "#BD3B3B",
+            "warning": "#9C5A16"
+          },
+          borderRadius: {
+            "sm": "12px",
+            "md": "16px",
+            "lg": "24px",
+            "full": "9999px"
+          },
+          fontFamily: {
+            headline: ["Plus Jakarta Sans", "sans-serif"],
+            display: ["Plus Jakarta Sans", "sans-serif"],
+            body: ["Plus Jakarta Sans", "sans-serif"],
+            label: ["Plus Jakarta Sans", "sans-serif"]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+    }
+  </style>
+</head>
+<body class="bg-bg text-text font-body antialiased flex justify-center items-center min-h-screen p-0 m-0 selection:bg-accent selection:text-text">
+<!-- Mobile Screen Canvas (360x800 canonical portrait container) -->
+<main class="relative w-full max-w-[360px] h-[800px] bg-bg overflow-hidden flex flex-col justify-between border border-border">
+<!-- Layer 1: Dimmed Photo Background -->
+<div class="absolute inset-0 z-0">
+<img alt="Foto keluarga sedang diproses" class="w-full h-full object-cover filter brightness-[0.4] saturate-[0.8]" src="https://lh3.googleusercontent.com/aida/AEtjO1XGA4oLo-lfv_TWKBcYbB4A3CxblToByq_8B-m82zbucbakV1okgsjgIpfZGHNs02_hKhBdOfUS-fnf9f3uPoaVJcdl6qKF2N8OjY7BxlGRdDmj2uLUuVloijqpbbbQc-zrBCUMfBuVPXhhYyLDuslbJEjwng1r8ABvFeBDmJpK5QvzA8E0OAqYcPZfR8d0BkD77OSSiID0eFCAyDaWrtmW3FQJLwf3wRcAcZHTKm_912pviLrgBzo76huO"/>
+<!-- Flat Scrim Overlay (No gradients, pure solid opacity) -->
+<div class="absolute inset-0 bg-[#111214] opacity-50"></div>
+</div>
+<!-- Top App Bar / Status Header -->
+<header class="relative z-10 w-full px-5 h-14 flex items-center justify-between">
+<button aria-label="Tutup" class="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-surface active:opacity-80 transition-opacity" type="button">
+<span class="material-symbols-outlined text-[24px]">close</span>
+</button>
+<div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#111214]/60 border border-white/10 text-surface">
+<span class="material-symbols-outlined text-[14px] text-accent">airplanemode_active</span>
+<span class="font-headline text-[12px] font-medium leading-[16px] text-[#EFEDE8]">Offline</span>
+</div>
+<div class="w-8"></div>
+</header>
+<!-- Center Content: Floating Tranquil Card -->
+<div class="relative z-10 px-5 w-full my-auto">
+<div class="bg-surface rounded-lg p-6 border border-border flex flex-col items-center">
+<!-- Mascot Aru: Small flat silhouette (56px) without gradient or shadows -->
+<div class="mb-5 flex justify-center items-center">
+<svg class="text-text" fill="none" height="56" viewbox="0 0 56 56" width="56" xmlns="http://www.w3.org/2000/svg">
+<!-- Tail -->
+<path d="M17 48C14 48 10 44 11 38C11.5 35 14 34 15 36C15.8 37.6 14.5 41 16.5 43C18.5 45 22 45 24 45" stroke="#111214" stroke-linecap="round" stroke-width="3"></path>
+<!-- Body -->
+<path d="M19 46C19 36 21 28 28 28C35 28 37 36 37 46C37 47.5 36 48 34 48H22C20 48 19 47.5 19 46Z" fill="#111214"></path>
+<!-- Head & Ears -->
+<path d="M20 25L21.5 14L27 21C27.3 21 28.7 21 29 21L34.5 14L36 25C38 27.5 38 31 36 33C34 35 30 35.5 28 35.5C26 35.5 22 35 20 33C18 31 18 27.5 20 25Z" fill="#111214"></path>
+<!-- Eyes -->
+<circle cx="25" cy="26" fill="#FFFFFF" r="1.75"></circle>
+<circle cx="31" cy="26" fill="#FFFFFF" r="1.75"></circle>
+</svg>
+</div>
+<!-- Status Header -->
+<span class="font-headline text-[12px] font-medium leading-[16px] text-text-2 mb-1 tracking-wide">
+          Memproses
+        </span>
+<h1 class="font-headline text-[18px] font-semibold leading-[26px] text-text mb-4 text-center">
+          Meningkatkan… 62%
+        </h1>
+<!-- Flat Progress Bar (8px height, no gradients, no shadows) -->
+<div class="w-full h-2 bg-surface-2 rounded-full overflow-hidden mb-2.5">
+<div class="h-full bg-accent rounded-full transition-all duration-300" style="width: 62%;"></div>
+</div>
+<!-- ETA Caption -->
+<p class="font-headline text-[12px] font-medium leading-[16px] text-text-2 text-center">
+          Sisa ±8 detik
+        </p>
+</div>
+</div>
+<!-- Bottom Actions -->
+<footer class="relative z-10 w-full px-5 pb-8 pt-4 flex flex-col items-center">
+<button class="h-12 px-6 flex items-center justify-center font-headline text-[15px] font-semibold leading-[22px] text-accent active:opacity-80 transition-opacity" type="button">
+        Batal
+      </button>
+</footer>
+</main>
+</body></html>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "on-secondary": "#2e3035", "surface-container-lowest": "#0d0e10", "outline-variant": "#504535", "tertiary-fixed": "#c2e8ff", "surface-tint": "#fabc41", "primary-fixed": "#ffdea8", "inverse-on-surface": "#303032", "surface-dim": "#121315", "surface-container": "#1f2022", "surface-variant": "#343537", "outline": "#9c8f7b", "surface": "#1B1C1F", "tertiary-container": "#68cdff", "error": "#ffb4ab", "tertiary-fixed-dim": "#78d1ff", "secondary-fixed": "#e2e2e7", "error-container": "#93000a", "on-tertiary": "#003549", "on-error": "#690005", "on-background": "#e3e2e4", "inverse-primary": "#7c5800", "on-tertiary-fixed-variant": "#004d68", "on-primary": "#422d00", "on-error-container": "#ffdad6", "on-secondary-fixed-variant": "#45474b", "on-surface": "#e3e2e4", "on-secondary-container": "#b7b8bd", "on-tertiary-fixed": "#001e2c", "surface-bright": "#38393b", "primary": "#ffd999", "inverse-surface": "#e3e2e4", "surface-container-highest": "#343537", "background": "#121315", "accent-text": "#F5B83D", "surface-2": "#25272B", "border": "#2F3136", "secondary": "#c6c6cb", "tertiary": "#b8e4ff", "on-tertiary-container": "#005674", "on-primary-container": "#6a4a00", "success": "#6FCF97", "on-primary-fixed": "#271900", "surface-container-high": "#292a2c", "primary-fixed-dim": "#fabc41", "warning": "#F2994A", "text-2": "A4A7AE", "danger": "#FF6B6B", "on-secondary-fixed": "#1a1c1f", "secondary-fixed-dim": "#c6c6cb", "secondary-container": "#47494d", "surface-container-low": "#1b1c1e", "on-surface-variant": "#d4c4ae", "on-primary-fixed-variant": "#5e4200", "primary-container": "#f5b83d", "text": "#F7F6F3" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-sm": "0.5rem", "gutter": "1rem", "margin": "1rem", "space-lg": "1.5rem", "space-xs": "0.25rem", "space-md": "1rem", "space-xl": "2rem" }, fontFamily: { "label-md": ["Plus Jakarta Sans"], "headline-md": ["Plus Jakarta Sans"], "caption-sm": ["Plus Jakarta Sans"], "body-md": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"] }, fontSize: { "label-md": ["15px", { lineHeight: "22px", fontWeight: "600" }], "headline-md": ["18px", { lineHeight: "26px", fontWeight: "600" }], "caption-sm": ["12px", { lineHeight: "16px", fontWeight: "500" }], "body-md": ["15px", { lineHeight: "22px", fontWeight: "400" }], "headline-lg": ["24px", { lineHeight: "32px", fontWeight: "700" }], "body-lg": ["15px", { lineHeight: "22px", fontWeight: "500" }] } } } };</script><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#121315;}body{overscroll-behavior:none;font-family:'Plus Jakarta Sans',sans-serif;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-background text-on-surface font-body-md text-body-md flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.25)] pt-safe"><div class="h-16 px-5 flex items-center justify-between gap-2"><div class="flex items-center gap-space-sm"><img alt="Arulume Cat Mascot Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGtmNkoVstnxiXMxCFXMqSaZFnMphsEr2_p7H1mpmCjJoQRQc2u85BfZq9B6jEwZiFZw0Y5pYZpuLdUWz-qhfhKAlF5QKA2N3sYanHKAAbzAfTYqblNBlS9T_-gBPbAFt6LXh1IgtybW0VGsIdjSBpIpPu4L7Yrw9lPtxcZ3tZRg3vL7MuAbsl3kG2poiYbkULrEei3QjbyQ2CEDzMLT19lNCjVCg8M1oN0zpX6Qc"/><span class="font-headline-md text-headline-md tracking-tight text-on-surface">Arulume</span></div><div class="flex items-center gap-space-xs"><div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high/80 text-on-surface-variant text-[11px] font-medium tracking-wide"><span class="material-symbols-outlined text-[14px] text-accent-text">airplanemode_active</span><span>Offline</span></div><a aria-label="Settings" class="w-12 h-12 flex items-center justify-center rounded-full text-on-surface hover:text-primary-container transition-colors" data-path="settings" href="#"><span class="material-symbols-outlined text-[22px]">settings</span></a><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full px-5 pt-16 bg-background min-h-screen"><div class="flex flex-col w-full pb-24">
+<!-- Privacy Guarantee Ribbon -->
+<div class="flex items-center justify-center gap-space-xs py-1.5 px-3 mx-auto mt-2 rounded-full bg-surface-container text-on-surface-variant shadow-sm">
+<span class="material-symbols-outlined text-[16px] text-primary-container" style="font-variation-settings: 'FILL' 1;">shield</span>
+<span class="font-caption-sm text-caption-sm tracking-wide">100% on-device processing · No uploads</span>
+</div>
+<!-- Warm Branding Tagline Area -->
+<div class="flex flex-col items-center text-center mt-4 mb-2 px-2">
+<p class="font-headline-lg text-headline-lg tracking-tight text-on-surface">Kembalikan cahaya fotomu</p>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Bring your quiet moments back to vibrant life</p>
+</div>
+<!-- Center Hero: Calming Silhouette Mascot (Aru) -->
+<div class="relative w-full flex flex-col items-center justify-center my-3 select-none">
+<!-- Ambient Warm Hearth Glow -->
+<div class="absolute w-52 h-52 rounded-full bg-primary-container/10 blur-3xl pointer-events-none -z-0"></div>
+<!-- Mascot Stage Container -->
+<div class="relative z-10 w-full max-w-[300px] h-56 rounded-3xl bg-surface flex flex-col items-center justify-end pb-3 shadow-md overflow-hidden">
+<!-- Starry ambient particles (SVG) -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none opacity-40" fill="none" viewbox="0 0 300 224">
+<circle cx="50" cy="40" fill="#fabc41" opacity="0.6" r="1.5"></circle>
+<circle cx="250" cy="65" fill="#fabc41" opacity="0.4" r="1"></circle>
+<circle cx="85" cy="90" fill="#fabc41" opacity="0.5" r="1.5"></circle>
+<circle cx="220" cy="30" fill="#ffd999" opacity="0.7" r="2"></circle>
+<path d="M210 100 L212 95 L214 100 L219 102 L214 104 L212 109 L210 104 L205 102 Z" fill="#fabc41" opacity="0.65"></path>
+<path d="M60 135 L61.5 131 L63 135 L67 136.5 L63 138 L61.5 142 L60 138 L56 136.5 Z" fill="#ffd999" opacity="0.5"></path>
+</svg>
+<!-- Aru The Cat Minimal Silhouette Illustration -->
+<div class="relative flex items-center justify-center cursor-pointer transition-transform duration-300 active:scale-95" id="mascot-aru" title="Aru is resting happily">
+<svg fill="none" height="150" viewbox="0 0 150 150" width="150" xmlns="http://www.w3.org/2000/svg">
+<!-- Soft Ground Shadow -->
+<ellipse cx="75" cy="140" fill="#0d0e10" opacity="0.8" rx="52" ry="7"></ellipse>
+<!-- Curled Fluffy Tail -->
+<path d="M102 124 C122 122 136 108 133 94 C130 82 118 84 117 92 C116 98 123 103 121 110 C118 119 104 125 94 126 Z" fill="#121315"></path>
+<!-- Body Silhouette -->
+<path d="M46 134 C42 120 44 92 60 76 C70 66 84 66 94 77 C107 92 109 119 104 134 C95 138 55 138 46 134 Z" fill="#121315"></path>
+<!-- Cat Paws resting forward -->
+<ellipse cx="65" cy="135" fill="#1b1c1e" rx="8" ry="4.5"></ellipse>
+<ellipse cx="85" cy="135" fill="#1b1c1e" rx="8" ry="4.5"></ellipse>
+<!-- Head Silhouette with expressive curved ears -->
+<path d="M50 48 L44 24 C54 28 62 36 68 39 C73 38 77 38 82 39 C88 36 96 28 106 24 L100 48 C108 55 111 65 109 74 C106 85 95 91 75 91 C55 91 44 85 41 74 C39 65 42 55 50 48 Z" fill="#121315"></path>
+<!-- Inner Ear warm ambient tint -->
+<polygon fill="#504535" opacity="0.6" points="50,34 46,27 57,32"></polygon>
+<polygon fill="#504535" opacity="0.6" points="100,34 104,27 93,32"></polygon>
+<!-- Distinctive Calm Round Eyes with warm amber reflective glow -->
+<!-- Left Eye -->
+<ellipse cx="61" cy="62" fill="#F7F6F3" rx="6.5" ry="7"></ellipse>
+<circle cx="62" cy="62" fill="#121315" r="3.8"></circle>
+<circle cx="63.5" cy="60" fill="#F5B83D" r="1.6"></circle>
+<circle cx="60.5" cy="64" fill="#F7F6F3" r="0.9"></circle>
+<!-- Right Eye -->
+<ellipse cx="89" cy="62" fill="#F7F6F3" rx="6.5" ry="7"></ellipse>
+<circle cx="88" cy="62" fill="#121315" r="3.8"></circle>
+<circle cx="89.5" cy="60" fill="#F5B83D" r="1.6"></circle>
+<circle cx="86.5" cy="64" fill="#F7F6F3" r="0.9"></circle>
+<!-- Cute Button Nose & Whisker Dots -->
+<polygon fill="#fabc41" opacity="0.85" points="75,71 72,68 78,68"></polygon>
+<path d="M75 71 L75 74 M75 74 Q71 77 67 75 M75 74 Q79 77 83 75" stroke="#343537" stroke-linecap="round" stroke-width="1.2"></path>
+<!-- Warm Amber Tiny Collar Bell -->
+<circle cx="75" cy="94" fill="#F5B83D" r="3.5"></circle>
+<circle cx="75" cy="94.5" fill="#422d00" r="1"></circle>
+</svg>
+</div>
+<!-- Mascot Mood Micro-Label -->
+<div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-2 text-on-surface-variant mt-1">
+<span class="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></span>
+<span class="font-caption-sm text-caption-sm" id="mascot-status">Neural engine warm &amp; idle</span>
+</div>
+</div>
+</div>
+<!-- Primary & Secondary CTA Block -->
+<div class="flex flex-col gap-3 w-full mt-2">
+<!-- Primary CTA: Choose Photo (56dp height, warm amber) -->
+<button class="w-full h-14 rounded-2xl bg-primary-container text-on-primary-container font-label-md text-label-md flex items-center justify-center gap-2.5 shadow-md active:scale-[0.98] transition-all" type="button">
+<span class="material-symbols-outlined text-[24px]">add_photo_alternate</span>
+<span>Choose Photo</span>
+</button>
+<!-- Secondary CTA: Choose Video (Outline-less surface style with 'Soon' badge) -->
+<button class="w-full h-12 rounded-2xl bg-surface-2 text-on-surface font-body-lg text-body-lg flex items-center justify-between px-5 active:bg-surface-variant transition-colors" type="button">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[22px] text-on-surface-variant">video_library</span>
+<span>Enhance Video</span>
+</div>
+<span class="font-caption-sm text-caption-sm px-2 py-0.5 rounded-full bg-surface-container-high text-accent-text font-semibold">Soon</span>
+</button>
+</div>
+<!-- Recent Enhancements Section Header & Interactive View Toggle -->
+<div class="flex items-center justify-between mt-7 mb-3 px-1">
+<div class="flex items-center gap-2">
+<span class="font-headline-md text-headline-md text-on-surface">Recent Work</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high font-caption-sm text-caption-sm text-on-surface-variant">3</span>
+</div>
+<button class="font-caption-sm text-caption-sm text-accent-text hover:underline flex items-center gap-1 py-1 px-2 rounded-lg" id="toggle-recent-view" type="button">
+<span class="material-symbols-outlined text-[16px]">swap_horiz</span>
+<span id="toggle-label">Show empty</span>
+</button>
+</div>
+<!-- Recent Enhancement Previews (Populated State) -->
+<div class="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5" id="recent-populated-state">
+<!-- Preview Card 1 -->
+<div class="flex-shrink-0 w-36 flex flex-col rounded-2xl bg-surface overflow-hidden shadow-sm active:scale-95 transition-transform cursor-pointer">
+<div class="relative h-44 w-full">
+<img class="w-full h-full object-cover" data-alt="Close up warm vintage portrait of a young person smiling softly in twilight ambient lighting, restored with crystal-sharp textures, fine film grain, golden glow, and photographic clarity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3RSF0Ek4wDviWL8V-oac7fkMbK0VyV2b9W3upKk2snYvSlvcl4JNnc9CxR1JOCUW4Mj8sXOClE1j4A2JS5xHnQcmG8XdOqS7Y4q0PvWpv-8dXqeE-OF4BFQbB_PRMfmiHOu4KE6IpqzHwnYxZCKQ2WW_9u33TmX0pKdB98T9sCL8NCB7xR-vHd54yaX6hD1paN2iOeN14QZ8HRBbQ19xnxdWq56Sslx_LKc7ABfs"/>
+<span class="absolute top-2 left-2 px-2 py-0.5 rounded-lg bg-surface-container-lowest/80 text-primary font-caption-sm text-caption-sm font-semibold backdrop-blur-md">4K · HDR</span>
+<div class="absolute bottom-2 right-2 w-7 h-7 rounded-full bg-surface/90 flex items-center justify-center text-on-surface">
+<span class="material-symbols-outlined text-[16px]">auto_awesome</span>
+</div>
+</div>
+<div class="p-2.5 flex flex-col">
+<span class="font-label-md text-label-md text-on-surface truncate">Sunset Portrait</span>
+<span class="font-caption-sm text-caption-sm text-on-surface-variant">12m ago · 2.4 MB</span>
+</div>
+</div>
+<!-- Preview Card 2 -->
+<div class="flex-shrink-0 w-36 flex flex-col rounded-2xl bg-surface overflow-hidden shadow-sm active:scale-95 transition-transform cursor-pointer">
+<div class="relative h-44 w-full">
+<img class="w-full h-full object-cover" data-alt="Architectural photograph of a cozy brick Tokyo coffee house alleyway at night, lantern reflections in raindrops on asphalt, recovered shadow detail and restored warm yellow interior illumination." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTkgSZrTqGk4iw9L25jGyvt07Af5uqHogLjQSbAqnDi1LGOdrzWvZSi7P6SRUO29fkeM2l8iNeGHjCw0y2mmlXkNI0rbBUKeDnDNWITJhoO_YsQwLUlnRyGStlmcYLuQOGxRlZe6UWmpXaZm0HvhfjCdtzq8HDLdTcq1bdm0UyPJltHMffcg1f6Sw3XODFm6pF0zh9Jmp2P-5gymL6HskDeOCET7lI1baDJxQXSOk"/>
+<span class="absolute top-2 left-2 px-2 py-0.5 rounded-lg bg-surface-container-lowest/80 text-primary font-caption-sm text-caption-sm font-semibold backdrop-blur-md">2x Scale</span>
+<div class="absolute bottom-2 right-2 w-7 h-7 rounded-full bg-surface/90 flex items-center justify-center text-on-surface">
+<span class="material-symbols-outlined text-[16px]">auto_awesome</span>
+</div>
+</div>
+<div class="p-2.5 flex flex-col">
+<span class="font-label-md text-label-md text-on-surface truncate">Night Alley</span>
+<span class="font-caption-sm text-caption-sm text-on-surface-variant">2h ago · 4.1 MB</span>
+</div>
+</div>
+<!-- Preview Card 3 -->
+<div class="flex-shrink-0 w-36 flex flex-col rounded-2xl bg-surface overflow-hidden shadow-sm active:scale-95 transition-transform cursor-pointer">
+<div class="relative h-44 w-full">
+<img class="w-full h-full object-cover" data-alt="Monochrome classic family archival portrait from the 1970s cleanly denoise-restored, showing crisp eyelashes, linen fabric textures, soft studio rim light, and warm sepia tone balance." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCS4inYc7GmzdrH-iGoXMVnoXx0aEY0KlY0he1CISDsV297npiC7uaIU2ZG9CUNdROkU8ZRTtJgb4NYQqo75PpPK4wFg3qploGUTxdiBToEhH7evUxwvMP4K5nSRkYAUKRz64LTm9cFzGsIw7n5nBf-d1zWBFnF_ioY_AW7NwzPMNaLrZd5dHZ0c5zbR7rPy4DPJHFMfKdrF_oMflL-rN-rZgD14AgE_mw51_dmIoE"/>
+<span class="absolute top-2 left-2 px-2 py-0.5 rounded-lg bg-surface-container-lowest/80 text-primary font-caption-sm text-caption-sm font-semibold backdrop-blur-md">Denoise</span>
+<div class="absolute bottom-2 right-2 w-7 h-7 rounded-full bg-surface/90 flex items-center justify-center text-on-surface">
+<span class="material-symbols-outlined text-[16px]">auto_awesome</span>
+</div>
+</div>
+<div class="p-2.5 flex flex-col">
+<span class="font-label-md text-label-md text-on-surface truncate">Archival Scan</span>
+<span class="font-caption-sm text-caption-sm text-on-surface-variant">Yesterday</span>
+</div>
+</div>
+</div>
+<!-- Toggleable Delightful Empty State (Hidden initially) -->
+<div class="hidden w-full rounded-2xl bg-surface p-6 flex flex-col items-center text-center shadow-sm" id="recent-empty-state">
+<!-- Mini peeking mascot SVG -->
+<div class="w-16 h-16 rounded-full bg-surface-2 flex items-center justify-center mb-3">
+<svg fill="none" height="40" viewbox="0 0 100 100" width="40">
+<ellipse cx="50" cy="55" fill="#121315" rx="30" ry="25"></ellipse>
+<polygon fill="#121315" points="32,40 26,20 44,28"></polygon>
+<polygon fill="#121315" points="68,40 74,20 56,28"></polygon>
+<circle cx="42" cy="52" fill="#F7F6F3" r="4.5"></circle>
+<circle cx="43" cy="52" fill="#121315" r="2.5"></circle>
+<circle cx="44" cy="51" fill="#F5B83D" r="1"></circle>
+<circle cx="58" cy="52" fill="#F7F6F3" r="4.5"></circle>
+<circle cx="57" cy="52" fill="#121315" r="2.5"></circle>
+<circle cx="58" cy="51" fill="#F5B83D" r="1"></circle>
+<polygon fill="#fabc41" points="50,60 48,58 52,58"></polygon>
+</svg>
+</div>
+<p class="font-headline-md text-headline-md text-on-surface">No stories yet</p>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1 max-w-[240px]">
+      Aru is ready to bring sharpness, clarity, and light to your first memory.
+    </p>
+<button class="mt-4 px-4 py-2 rounded-xl bg-surface-2 text-primary font-caption-sm text-caption-sm flex items-center gap-1.5 active:bg-surface-variant" type="button">
+<span class="material-symbols-outlined text-[16px]">touch_app</span>
+<span>Pick your first photo</span>
+</button>
+</div>
+<!-- Local Quick Features Bento Card -->
+<div class="grid grid-cols-2 gap-3 mt-6">
+<div class="p-3.5 rounded-2xl bg-surface flex flex-col justify-between">
+<div class="w-8 h-8 rounded-xl bg-surface-2 flex items-center justify-center text-primary mb-2">
+<span class="material-symbols-outlined text-[20px]">flash_on</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface">Ultra Sharp</p>
+<p class="font-caption-sm text-caption-sm text-on-surface-variant mt-0.5">Real-ESRGAN on GPU</p>
+</div>
+</div>
+<div class="p-3.5 rounded-2xl bg-surface flex flex-col justify-between">
+<div class="w-8 h-8 rounded-xl bg-surface-2 flex items-center justify-center text-accent-text mb-2">
+<span class="material-symbols-outlined text-[20px]">lock</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface">Strictly Private</p>
+<p class="font-caption-sm text-caption-sm text-on-surface-variant mt-0.5">Zero cloud telemetry</p>
+</div>
+</div>
+</div>
+</div>
+<script>
+  (function() {
+    // Mascot click Easter-egg interaction
+    const mascot = document.getElementById('mascot-aru');
+    const statusLabel = document.getElementById('mascot-status');
+    const moods = [
+      'Aru purred happily',
+      'Ready to de-noise memories',
+      'Warm amber glow active',
+      'Sharpening claws & filters',
+      'Neural engine warm & idle'
+    ];
+    let moodIdx = 0;
+
+    if (mascot && statusLabel) {
+      mascot.addEventListener('click', function() {
+        moodIdx = (moodIdx + 1) % moods.length;
+        statusLabel.textContent = moods[moodIdx];
+        mascot.classList.add('scale-105');
+        setTimeout(() => mascot.classList.remove('scale-105'), 200);
+      });
+    }
+
+    // Toggle between populated and empty states
+    const toggleBtn = document.getElementById('toggle-recent-view');
+    const toggleLabel = document.getElementById('toggle-label');
+    const populatedSection = document.getElementById('recent-populated-state');
+    const emptySection = document.getElementById('recent-empty-state');
+
+    if (toggleBtn && populatedSection && emptySection) {
+      let showingEmpty = false;
+      toggleBtn.addEventListener('click', function() {
+        showingEmpty = !showingEmpty;
+        if (showingEmpty) {
+          populatedSection.classList.add('hidden');
+          emptySection.classList.remove('hidden');
+          toggleLabel.textContent = 'Show recent';
+        } else {
+          populatedSection.classList.remove('hidden');
+          emptySection.classList.add('hidden');
+          toggleLabel.textContent = 'Show empty';
+        }
+      });
+    }
+  })();
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-background/85 backdrop-blur-xl shadow-[0_-1px_8px_rgba(0,0,0,0.2)]" data-active-classes="text-primary-container font-semibold"><div class="flex justify-around items-center h-16 px-4"><a aria-current="page" class="flex flex-col items-center justify-center gap-1 min-w-[56px] min-h-[48px] transition-colors text-primary-container font-semibold" data-path="workspace" href="#"><span class="material-symbols-outlined text-[22px]">auto_fix_high</span><span class="font-caption-sm text-caption-sm">Enhance</span></a><a class="flex flex-col items-center justify-center gap-1 min-w-[56px] min-h-[48px] text-on-surface-variant transition-colors" data-path="batch-queue" href="#"><span class="material-symbols-outlined text-[22px]">layers</span><span class="font-caption-sm text-caption-sm">Batch</span></a><a class="flex flex-col items-center justify-center gap-1 min-w-[56px] min-h-[48px] text-on-surface-variant transition-colors" data-path="history-gallery" href="#"><span class="material-symbols-outlined text-[22px]">photo_library</span><span class="font-caption-sm text-caption-sm">Library</span></a></div></nav></body></html>
